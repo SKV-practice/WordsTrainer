@@ -105,7 +105,9 @@ header {
   font-family: 'JetBrains Mono', monospace; font-size: .9rem;
   padding: 13px 16px; border-radius: 10px; cursor: pointer; text-align: left; transition: .12s; line-height: 1.4;
 }
-.ans-btn:hover:not(:disabled) { border-color: var(--accent); background: #1e1e35; }
+@media (hover: hover) {
+  .ans-btn:hover:not(:disabled) { border-color: var(--accent); background: #1e1e35; }
+}
 .ans-btn.correct { border-color: var(--green); background: #0f2a1a; color: var(--green); }
 .ans-btn.wrong   { border-color: var(--red);   background: #2a0f0f; color: var(--red); }
 .ans-btn.plain   { font-family: 'Space Grotesk', sans-serif; }
