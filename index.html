@@ -1658,6 +1658,7 @@ function renderAnswers(opts, correct, plain) {
 }
 
 function pickAnswer(btn, chosen, correct) {
+  btn.blur();
   if (quizAnswered) return;
   quizAnswered = true;
   document.querySelectorAll('.ans-btn').forEach(b => {
