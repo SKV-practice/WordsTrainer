@@ -1877,14 +1877,26 @@ function renderAdd() {
 
 async function fetchPron(word) {
   try {
-    const lookup = word.split(' ')[0];
-    const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(lookup));
-    if (!res.ok) return '';
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 100,
+        messages: [{
+          role: 'user',
+          content: 'For the English word or phrase "' + word + '" give me ONLY a JSON object with two fields: "ipa" (American English IPA transcription without slashes) and "read" (how to pronounce it in Russian letters, with stress mark ´ after the stressed vowel). No explanation, just JSON. Example: {"ipa":"kwaɪət","read":"ква́йэт"}'
+        }]
+      })
+    });
+    if (!res.ok) return { ipa: '', read: '' };
     const data = await res.json();
-    const phonetics = (data[0] && data[0].phonetics) ? data[0].phonetics : [];
-    const found = phonetics.find(p => p.text && p.audio) || phonetics.find(p => p.text) || {};
-    return (found.text || '').replace(/\//g, '').trim();
-  } catch(e) { return ''; }
+    const text = data.content && data.content[0] ? data.content[0].text : '';
+    const match = text.match(/\{[^}]+\}/);
+    if (!match) return { ipa: '', read: '' };
+    const parsed = JSON.parse(match[0]);
+    return { ipa: parsed.ipa || '', read: parsed.read || '' };
+  } catch(e) { return { ipa: '', read: '' }; }
 }
 
 async function addWord() {
@@ -1897,11 +1909,11 @@ async function addWord() {
     if (!ru || !v1 || !v2 || !v3) { showMsg(msg, '⚠ Заполни все поля', false); return; }
     if ([...VERBS,...customVerbs].find(v => v[0] === v1)) { showMsg(msg, '⚠ "' + v1 + '" уже есть в словаре', false); return; }
     showMsg(msg, '⏳ Загружаю транскрипцию...', true);
-    const ipa = await fetchPron(v1);
-    customVerbs.push([v1, v2, v3, ru, ipa, '']);
+    const { ipa, read } = await fetchPron(v1);
+    customVerbs.push([v1, v2, v3, ru, ipa, read]);
     saveStorage(); updateLogo();
     ['av-ru','av-v1','av-v2','av-v3'].forEach(id => { document.getElementById(id).value = ''; });
-    showMsg(msg, '✓ "' + v1 + '" добавлен!' + (ipa ? ' [' + ipa + ']' : ''), true);
+    showMsg(msg, '✓ "' + v1 + '" добавлен!' + (ipa ? ' [' + ipa + '] ' + read : ''), true);
     renderCustomList();
   } else {
     const ru  = document.getElementById('as-ru').value.trim();
@@ -1911,13 +1923,13 @@ async function addWord() {
     const baseArr = cat === 'adj' ? [...ADJS,...customAdjs] : cat === 'nouns' ? [...NOUNS,...customNouns] : [...PHRASAL,...customPhrasal];
     if (baseArr.find(v => v[0] === en)) { showMsg(msg, '⚠ "' + en + '" уже есть в словаре', false); return; }
     showMsg(msg, '⏳ Загружаю транскрипцию...', true);
-    const ipa = await fetchPron(en);
-    if      (cat === 'adj')   customAdjs.push([en, ru, ipa, '']);
-    else if (cat === 'nouns') customNouns.push([en, ru, ipa, '']);
-    else                      customPhrasal.push([en, ru, ipa, '']);
+    const { ipa, read } = await fetchPron(en);
+    if      (cat === 'adj')   customAdjs.push([en, ru, ipa, read]);
+    else if (cat === 'nouns') customNouns.push([en, ru, ipa, read]);
+    else                      customPhrasal.push([en, ru, ipa, read]);
     saveStorage(); updateLogo();
     ['as-ru','as-en'].forEach(id => { document.getElementById(id).value = ''; });
-    showMsg(msg, '✓ "' + en + '" добавлено!' + (ipa ? ' [' + ipa + ']' : ''), true);
+    showMsg(msg, '✓ "' + en + '" добавлено!' + (ipa ? ' [' + ipa + '] ' + read : ''), true);
     renderCustomList();
   }
 }
