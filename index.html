@@ -18,7 +18,8 @@
   --text:     #e8e8f0;
   --muted:    #7070a0;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+button:focus { outline: none; }
 body {
   font-family: 'Space Grotesk', sans-serif;
   background: var(--bg); color: var(--text);
@@ -109,6 +110,8 @@ header {
 .ans-btn.wrong   { border-color: var(--red);   background: #2a0f0f; color: var(--red); }
 .ans-btn.plain   { font-family: 'Space Grotesk', sans-serif; }
 .ans-btn:disabled { cursor: default; }
+.ans-btn:focus { outline: none; }
+.ans-btn:focus-visible { outline: none; }
 .feedback { font-size: .9rem; min-height: 20px; }
 .feedback.ok  { color: var(--green); }
 .feedback.err { color: var(--red); }
