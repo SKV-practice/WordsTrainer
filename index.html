@@ -97,8 +97,8 @@ header {
 .q-word { font-family: 'JetBrains Mono', monospace; font-size: 2.2rem; font-weight: 500; color: var(--accent2); margin-bottom: 6px; }
 .q-hint { font-size: .88rem; color: var(--muted); margin-bottom: 10px; }
 .q-pron { min-height: 36px; margin-bottom: 16px; }
-.q-pron .pron-ipa  { display: block; font-family: 'JetBrains Mono', monospace; font-size: .92rem; color: var(--accent2); opacity: .85; }
-.q-pron .pron-read { display: block; font-size: .8rem; color: var(--muted); margin-top: 2px; }
+.q-pron .pron-read { display: block; font-size: .92rem; color: var(--accent2); opacity: .9; }
+.q-pron .pron-ipa  { display: block; font-size: .8rem; color: var(--muted); margin-top: 2px; }
 .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
 .ans-btn {
   background: var(--surface2); border: 1.5px solid var(--border); color: var(--text);
@@ -174,8 +174,8 @@ header {
 .fc-front { background: linear-gradient(135deg,#1a1a2e,#16213e); border: 1px solid var(--border); }
 .fc-back  { background: linear-gradient(135deg,#0f2a1a,#1a2e1a); border: 1px solid var(--green); transform: rotateY(180deg); }
 .fc-word  { font-family: 'JetBrains Mono', monospace; font-size: 1.9rem; color: var(--accent2); font-weight: 500; margin-bottom: 4px; }
-.fc-ipa   { font-family: 'JetBrains Mono', monospace; font-size: .88rem; color: var(--accent2); opacity: .8; margin-bottom: 2px; text-align: center; }
-.fc-read  { font-size: .78rem; color: var(--muted); text-align: center; }
+.fc-read  { font-size: .88rem; color: var(--accent2); opacity: .9; margin-bottom: 2px; text-align: center; }
+.fc-ipa   { font-size: .78rem; color: var(--muted); text-align: center; }
 .fc-sub   { font-size: .8rem; color: var(--muted); margin-top: 8px; text-align: center; }
 .fc-tap   { font-size: .72rem; color: var(--muted); margin-top: 10px; }
 .fc-translation { font-size: 1.35rem; font-weight: 600; color: var(--green); margin-bottom: 4px; }
@@ -235,9 +235,10 @@ header {
 }
 .word-table tr.detail-row.hidden { display: none; }
 .detail-inner { display: flex; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
-.detail-pron { display: flex; flex-direction: column; gap: 2px; min-width: 120px; }
-.detail-ipa  { font-family: "JetBrains Mono", monospace; font-size: .8rem; color: var(--accent2); }
-.detail-read { font-size: .75rem; color: var(--muted); }
+.detail-pron { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 120px; }
+.detail-ipa, .detail-read { display: block; }
+.detail-read { font-size: .8rem; color: var(--accent2); }
+.detail-ipa  { font-size: .75rem; color: var(--muted); }
 .detail-forms { display: flex; gap: 16px; }
 .detail-form  { display: flex; flex-direction: column; gap: 2px; }
 .detail-form-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
@@ -251,6 +252,12 @@ header {
 }
 .btn-retry-pron:hover { border-color: var(--accent2); color: var(--accent2); }
 .btn-retry-pron:disabled { opacity: .6; cursor: default; }
+.detail-pron { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.btn-edit-pron {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-size: .8rem; padding: 3px 6px; border-radius: 5px; transition: .12s;
+}
+.btn-edit-pron:hover { color: var(--accent2); background: #1a1a30; }
 @media (max-width: 1449px) {
   .desktop-only { display: none !important; }
 }
@@ -268,9 +275,11 @@ header {
 .word-table tr:hover td { background: var(--surface2); }
 .col-en   { font-family: 'JetBrains Mono', monospace; color: var(--accent2); }
 .col-v2, .col-v3 { font-family: 'JetBrains Mono', monospace; color: var(--text); }
-.col-pron { min-width: 140px; }
-.pron-ipa  { display: block; font-family: 'JetBrains Mono', monospace; font-size: .76rem; color: var(--accent2); opacity: .8; }
-.pron-read { display: block; font-size: .72rem; color: var(--muted); margin-top: 1px; }
+.col-pron { min-width: 160px; }
+.col-pron > * { display: inline-flex; vertical-align: middle; }
+.col-pron .btn-retry-pron, .col-pron .btn-edit-pron { font-size: .7rem; padding: 3px 8px; margin-left: 6px; }
+.pron-read { display: block; font-size: .76rem; color: var(--accent2); opacity: .85; }
+.pron-ipa  { display: block; font-size: .72rem; color: var(--muted); margin-top: 1px; }
 .col-ru { color: var(--muted); }
 .irreg { display: inline-block; background: #2a1a4a; color: var(--accent2); font-size: .62rem; padding: 1px 5px; border-radius: 3px; font-weight: 600; margin-left: 4px; vertical-align: middle; }
 .row-actions { display: flex; gap: 4px; justify-content: flex-end; white-space: nowrap; }
@@ -541,8 +550,8 @@ header {
       <div class="fc" id="fc" onclick="flipCard()">
         <div class="fc-front">
           <div class="fc-word" id="fc-word"></div>
-          <div class="fc-ipa"  id="fc-ipa"></div>
           <div class="fc-read" id="fc-read"></div>
+          <div class="fc-ipa"  id="fc-ipa"></div>
           <div class="fc-sub"  id="fc-sub"></div>
           <div class="fc-tap">нажми, чтобы перевернуть &#8594;</div>
         </div>
@@ -1085,7 +1094,6 @@ const NOUNS = [
   ["celebration", "празднование", "ˌselɪˈbreɪʃən", "селибрэ́йшэн"],
   ["central heating", "центральное отопление", "ˈsentrəl ˈhiːtɪŋ", "сэ́нтрэл хи́тинг"],
   ["certificate", "справка, сертификат", "sərˈtɪfɪkɪt", "сэрти́фикит"],
-  ["certificate of criminal record", "справка о несудимости", "sərˈtɪfɪkɪt əv ˈkrɪmɪnəl ˈrekərd", "сэрти́фикит эв кри́минэл рэ́корд"],
   ["change", "изменение", "tʃeɪndʒ", "чейндж"],
   ["charger", "зарядное устройство", "ˈtʃɑːrdʒər", "ча́рджэр"],
   ["chicken", "курица", "ˈtʃɪkɪn", "чи́кин"],
@@ -1576,7 +1584,7 @@ const PHRASAL = [
   ["walk away", "уходить", "wɔːk əˈweɪ", "уок эуэ́й"],
   ["watch out", "быть осторожным", "wɒtʃ aʊt", "уоч аут"],
   ["wind up", "оказаться", "waɪnd ʌp", "уайнд ап"],
-  ["write down", "записывать", "", ""],
+  ["write down", "записывать", "", "райт даун"],
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2042,6 +2050,21 @@ function clearSearch() {
   renderBrowse();
 }
 
+// Build pronunciation cell content (used in desktop column AND mobile detail row)
+function buildPronInner(ipa, read, c, word, rid) {
+  const safeW    = word.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  const safeIpa  = (ipa || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  const safeRead = (read || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  let html = '';
+  if (read) html += '<span class="pron-read">'+read+'</span>';
+  if (ipa)  html += '<span class="pron-ipa">['+ipa+']</span>';
+  if (!ipa) {
+    html += '<button class="btn-retry-pron" data-cat="'+c+'" data-word="'+safeW+'">&#128260; Загрузить</button>';
+  }
+  html += '<button class="btn-edit-pron" data-cat="'+c+'" data-word="'+safeW+'" data-ipa="'+safeIpa+'" data-read="'+safeRead+'" data-rid="'+rid+'" title="Изменить произношение">&#x270F;</button>';
+  return html;
+}
+
 function buildExpandRow(rowId, v, c) {
   const ipa  = c === 'verbs' ? (v[4] || '') : (v[2] || '');
   const read = c === 'verbs' ? (v[5] || '') : (v[3] || '');
@@ -2052,19 +2075,7 @@ function buildExpandRow(rowId, v, c) {
       + '<div class="detail-form"><span class="detail-form-label">V3</span><span class="detail-form-val">'+v[2]+'</span></div>'
       + '</div>';
   }
-  const safeW = v[0].replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-  const pronHtml = (ipa || read)
-    ? '<div class="detail-pron">'
-      + (ipa  ? '<span class="detail-ipa">['+ipa+']</span>' : '')
-      + (read ? '<span class="detail-read">'+read+'</span>' : '')
-      + '</div>'
-    : '<div class="detail-pron">'
-      + '<button class="btn-retry-pron" data-cat="'+c+'" data-word="'+safeW+'">&#128260; Загрузить транскрипцию</button>'
-      + '</div>';
-  if (!formsHtml && !(ipa || read) && c !== 'verbs') {
-    // still show retry button even with no formsHtml
-  }
-  if (!pronHtml && !formsHtml) return '';
+  const pronHtml = '<div class="detail-pron" id="pron-'+rowId+'">' + buildPronInner(ipa, read, c, v[0], rowId) + '</div>';
   return '<tr class="detail-row hidden" id="detail-'+rowId+'"><td colspan="10">'
     + '<div class="detail-inner">'+pronHtml+formsHtml+'</div>'
     + '</td></tr>';
@@ -2110,7 +2121,7 @@ function renderBrowse() {
     body.innerHTML = filtered.map(v => {
       const ru  = getRu('verbs', v);
       const rid = btoa('verbs:'+v[0]).replace(/=/g,'');
-      const extra = '<td class="col-pron desktop-only"><span class="pron-ipa">'+(v[4]?'['+v[4]+']':'')+'</span><span class="pron-read">'+(v[5]||'')+'</span></td>'
+      const extra = '<td class="col-pron desktop-only" id="pron-d-'+rid+'">'+buildPronInner(v[4]||'', v[5]||'', 'verbs', v[0], 'd-'+rid)+'</td>'
         + '<td class="col-v2 desktop-only">'+v[1]+'</td>'
         + '<td class="col-v3 desktop-only">'+v[2]+'</td>';
       return mainRow(v, extra + '<td class="col-ru" id="ru-cell-'+rid+'">'+ru+'</td>');
@@ -2125,7 +2136,7 @@ function renderBrowse() {
     body.innerHTML = filtered.map(v => {
       const ru  = getRu(cat, v);
       const rid = btoa(cat+':'+v[0]).replace(/=/g,'');
-      const extra = '<td class="col-pron desktop-only"><span class="pron-ipa">'+(v[2]?'['+v[2]+']':'')+'</span><span class="pron-read">'+(v[3]||'')+'</span></td>';
+      const extra = '<td class="col-pron desktop-only" id="pron-d-'+rid+'">'+buildPronInner(v[2]||'', v[3]||'', cat, v[0], 'd-'+rid)+'</td>';
       return mainRow(v, extra + '<td class="col-ru" id="ru-cell-'+rid+'">'+ru+'</td>');
     }).join('');
   }
@@ -2235,6 +2246,39 @@ function renderAdd() {
 }
 
 // Retry fetching pronunciation for a word that's missing it
+// ── EDIT PRONUNCIATION ──────────────────────────────────────────────────────
+function startEditPron(data) {
+  const el = document.getElementById('pron-' + data.rid);
+  if (!el) return;
+  el.innerHTML =
+    '<input class="inline-inp" id="ipa-' + data.rid + '" placeholder="IPA, напр. kwaɪət" value="' + (data.ipa || '') + '" style="font-family:\'JetBrains Mono\',monospace;max-width:160px">' +
+    '<input class="inline-inp" id="read-' + data.rid + '" placeholder="по-русски, напр. ква́йэт" value="' + (data.read || '') + '" style="max-width:160px">' +
+    '<button class="btn-save" data-cat="' + data.cat + '" data-word="' + data.word + '" data-rid="' + data.rid + '">&#10003;</button>' +
+    '<button class="btn-cancel" onclick="renderBrowse()">&#x2715;</button>';
+  const ipaInp = document.getElementById('ipa-' + data.rid);
+  if (ipaInp) ipaInp.focus();
+}
+
+function savePron(c, word, rid) {
+  const ipaVal  = document.getElementById('ipa-' + rid).value.trim();
+  const readVal = document.getElementById('read-' + rid).value.trim();
+  function updateArr(arr) {
+    const entry = arr.find(v => v[0] === word);
+    if (entry) {
+      if (c === 'verbs') { entry[4] = ipaVal; entry[5] = readVal; }
+      else               { entry[2] = ipaVal; entry[3] = readVal; }
+      return true;
+    }
+    return false;
+  }
+  if      (c === 'verbs')   { if (!updateArr(VERBS))   updateArr(customVerbs); }
+  else if (c === 'adj')     { if (!updateArr(ADJS))    updateArr(customAdjs); }
+  else if (c === 'nouns')   { if (!updateArr(NOUNS))   updateArr(customNouns); }
+  else                      { if (!updateArr(PHRASAL)) updateArr(customPhrasal); }
+  saveStorage();
+  renderBrowse();
+}
+
 async function retryPron(c, word) {
   const ipa_read = await fetchPron(word);
   if (!ipa_read.ipa && !ipa_read.read) return false;
@@ -2262,35 +2306,34 @@ async function retryPron(c, word) {
   return true;
 }
 
-async function fetchPron(word) {
+// Fetch IPA for a single word from the Free Dictionary API
+async function fetchPronWord(w) {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 100,
-        messages: [{
-          role: 'user',
-          content: 'For the English word or phrase "' + word + '" give me ONLY a JSON object with two fields: "ipa" (American English IPA transcription without slashes) and "read" (how to pronounce it in Russian letters, with stress mark ´ after the stressed vowel). No explanation, just JSON. Example: {"ipa":"kwaɪət","read":"ква́йэт"}'
-        }]
-      })
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(w), {
+      signal: controller.signal
     });
     clearTimeout(timeoutId);
-    if (!res.ok) return { ipa: '', read: '' };
+    if (!res.ok) return '';
     const data = await res.json();
-    const text = data.content && data.content[0] ? data.content[0].text : '';
-    const match = text.match(/\{[^}]+\}/);
-    if (!match) return { ipa: '', read: '' };
-    const parsed = JSON.parse(match[0]);
-    return { ipa: parsed.ipa || '', read: parsed.read || '' };
-  } catch(e) { return { ipa: '', read: '' }; }
+    const phonetics = (data[0] && data[0].phonetics) ? data[0].phonetics : [];
+    const found = phonetics.find(p => p.text && p.audio) || phonetics.find(p => p.text) || {};
+    let ipa = (found.text || '').replace(/\//g, '').trim();
+    ipa = ipa.replace(/ɹ/g, 'r').replace(/ɡ/g, 'g');
+    return ipa;
+  } catch(e) { return ''; }
+}
+
+// Fetch IPA for a word or multi-word phrase (e.g. phrasal verbs)
+async function fetchPron(word) {
+  const words = word.split(' ').filter(w => w);
+  const parts = [];
+  for (const w of words) {
+    const ipa = await fetchPronWord(w);
+    if (ipa) parts.push(ipa);
+  }
+  return { ipa: parts.join(' '), read: '' };
 }
 
 async function addWord() {
@@ -2384,8 +2427,9 @@ function setText(id, txt) { document.getElementById(id).textContent = txt; }
 function setQPron(ipa, read) {
   const el = document.getElementById('q-pron');
   if (!el) return;
-  if (ipa) {
-    el.innerHTML = '<span class="pron-ipa">[' + ipa + ']</span><span class="pron-read">' + read + '</span>';
+  if (ipa || read) {
+    el.innerHTML = (read ? '<span class="pron-read">' + read + '</span>' : '')
+                  + (ipa  ? '<span class="pron-ipa">[' + ipa + ']</span>' : '');
   } else {
     el.innerHTML = '';
   }
@@ -2564,7 +2608,12 @@ window.addEventListener('DOMContentLoaded', function() {
     const editBtn = e.target.closest('.btn-edit');
     const delBtn  = e.target.closest('.btn-del');
     const retryBtn = e.target.closest('.btn-retry-pron');
-    if (editBtn) {
+    const editPronBtn = e.target.closest('.btn-edit-pron');
+    const savePronBtn = e.target.closest('.col-pron .btn-save, .detail-pron .btn-save');
+    if (savePronBtn) {
+      e.stopPropagation();
+      savePron(savePronBtn.dataset.cat, savePronBtn.dataset.word, savePronBtn.dataset.rid);
+    } else if (editBtn) {
       e.stopPropagation();
       startInlineEdit(editBtn.dataset.cat, editBtn.dataset.word, editBtn.dataset.ru);
     } else if (delBtn) {
@@ -2580,6 +2629,9 @@ window.addEventListener('DOMContentLoaded', function() {
           retryBtn.disabled = false;
         }
       });
+    } else if (editPronBtn) {
+      e.stopPropagation();
+      startEditPron(editPronBtn.dataset);
     } else {
       const row = e.target.closest('tr.expandable');
       if (row && row.dataset.rid) toggleRow(row.dataset.rid);
