@@ -360,6 +360,13 @@ header {
 }
 .import-textarea:focus { border-color: var(--accent); }
 .modal-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; flex-wrap: wrap; }
+.modal-close {
+  position: absolute; top: 18px; right: 18px;
+  background: none; border: none; color: var(--muted);
+  font-size: 1.1rem; cursor: pointer; padding: 4px; line-height: 1;
+  border-radius: 6px; transition: .12s;
+}
+.modal-close:hover { color: var(--text); background: var(--surface2); }
 .import-progress { font-size: .84rem; color: var(--muted); margin-top: 12px; min-height: 20px; }
 .import-progress.ok  { color: var(--green); }
 .import-progress.err  { color: var(--red); }
@@ -2352,7 +2359,10 @@ function openImport() {
   document.getElementById('import-text').value = '';
   document.getElementById('import-progress').textContent = '';
   document.getElementById('import-progress').className = 'import-progress';
-  document.getElementById('import-btn').disabled = false;
+  const btn = document.getElementById('import-btn');
+  btn.disabled = false;
+  btn.textContent = '\u2713 Импортировать';
+  btn.onclick = runImport;
   document.getElementById('import-modal').classList.remove('hidden');
 }
 
@@ -2470,6 +2480,8 @@ async function runImport() {
   prog.textContent = msg;
   prog.className = 'import-progress ' + status;
   btn.disabled = false;
+  btn.textContent = '✓ Готово';
+  btn.onclick = closeImport;
 }
 
 // Init DOM-dependent listeners after page load
@@ -2510,7 +2522,8 @@ window.addEventListener('DOMContentLoaded', function() {
 </script>
 <!-- IMPORT MODAL -->
 <div class="modal-overlay hidden" id="import-modal">
-  <div class="modal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeImport()" title="Закрыть">&#x2715;</button>
     <div class="modal-title">&#128229; Импорт слов</div>
     <div class="modal-hint">
       Вставь список по одному слову на строку. Поддерживаются форматы:<br>
@@ -2520,7 +2533,6 @@ window.addEventListener('DOMContentLoaded', function() {
     <textarea class="import-textarea" id="import-text" placeholder="brave - смелый&#10;give up сдаваться&#10;see / saw / seen - видеть&#10;cat	кот"></textarea>
     <div class="import-progress" id="import-progress"></div>
     <div class="modal-actions">
-      <button class="btn-import-cancel" onclick="closeImport()">Отмена</button>
       <button class="btn-import-action" id="import-btn" onclick="runImport()">&#10003; Импортировать</button>
     </div>
   </div>
