@@ -2003,6 +2003,22 @@ function exportWords() {
 }
 
 
+// One-time cleanup: remove custom entries that duplicate built-in words
+function dedupeCustomArrays() {
+  let changed = false;
+  function dedupe(customArr, builtinArr) {
+    const before = customArr.length;
+    const filtered = customArr.filter(v => !builtinArr.find(b => b[0] === v[0]));
+    if (filtered.length !== before) changed = true;
+    return filtered;
+  }
+  customVerbs   = dedupe(customVerbs,   VERBS);
+  customAdjs    = dedupe(customAdjs,    ADJS);
+  customNouns   = dedupe(customNouns,   NOUNS);
+  customPhrasal = dedupe(customPhrasal, PHRASAL);
+  if (changed) saveStorage();
+}
+
 function onSearchInput() {
   const val = document.getElementById('search-inp').value;
   const btn = document.getElementById('search-clear');
@@ -2350,6 +2366,7 @@ function showMsg(el, text, ok) {
 // INIT
 // ─────────────────────────────────────────────────────────────────────────────
 loadStorage();
+dedupeCustomArrays();
 switchCat('verbs');
 switchMode('quiz');
 
