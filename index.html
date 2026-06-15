@@ -606,6 +606,10 @@ header {
           <label>V3 — Past Participle</label>
           <input class="add-inp" id="av-v3" placeholder="spoken" autocomplete="off" spellcheck="false">
         </div>
+        <div class="add-field-wrap" style="grid-column:1/-1">
+          <label>Произношение (рус) <span style="font-weight:400;color:var(--muted)">(необязательно)</span></label>
+          <input class="add-inp plain" id="av-read" placeholder="например: спо́укэн" autocomplete="off" spellcheck="false">
+        </div>
       </div>
       <div class="add-msg" id="av-msg"></div>
       <button class="add-submit" onclick="addWord()">Добавить глагол</button>
@@ -619,6 +623,10 @@ header {
         <div class="add-field-wrap" style="grid-column:1/-1">
           <label>Слово (English)</label>
           <input class="add-inp" id="as-en" placeholder="brave" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="add-field-wrap" style="grid-column:1/-1">
+          <label>Произношение (рус) <span style="font-weight:400;color:var(--muted)">(необязательно)</span></label>
+          <input class="add-inp plain" id="as-read" placeholder="например: брэйв" autocomplete="off" spellcheck="false">
         </div>
       </div>
       <div class="add-msg" id="as-msg"></div>
@@ -1044,7 +1052,6 @@ const NOUNS = [
   ["ache", "боль", "eɪk", "эйк"],
   ["achievement", "достижение", "əˈtʃiːvmənt", "эчи́вмэнт"],
   ["acquaintance", "знакомый", "əˈkweɪntəns", "эквэ́йнтэнс"],
-  ["address", "адрес", "ˈædres", "э́дрэс"],
   ["admiration", "восхищение", "ˌædməˈreɪʃən", "эдмирэ́йшэн"],
   ["adventure", "приключение", "ədˈventʃər", "эдвэ́нчэр"],
   ["advertising", "реклама", "ˈædvərtaɪzɪŋ", "э́двэртайзинг"],
@@ -1052,14 +1059,11 @@ const NOUNS = [
   ["age", "возраст", "eɪdʒ", "эйдж"],
   ["agency", "агентство", "ˈeɪdʒənsi", "э́йджэнси"],
   ["agenda", "повестка", "əˈdʒendə", "эджэ́ндэ"],
-  ["airplane", "самолёт", "ˈerpleɪn", "э́рплэйн"],
-  ["airport", "аэропорт", "ˈerpɔːrt", "э́рпорт"],
   ["allergy", "аллергия", "ˈælərɡi", "э́лэрджи"],
   ["allergy medicine", "лекарство от аллергии", "ˈælərɡi ˈmedɪsɪn", "э́лэрджи мэ́дисин"],
   ["antibiotic", "антибиотик", "ˌæntɪbaɪˈɒtɪk", "энтибайо́тик"],
   ["anxiety", "тревожность", "æŋˈzaɪɪti", "энгза́йити"],
   ["apartment complex", "жилой комплекс", "əˈpɑːrtmənt ˈkɒmpleks", "эпа́ртмэнт ко́мплекс"],
-  ["app", "приложение", "æp", "эп"],
   ["appliance", "бытовой прибор", "əˈplaɪəns", "эпла́йэнс"],
   ["applicant", "кандидат", "ˈæplɪkənt", "э́пликэнт"],
   ["application", "приложение", "ˌæplɪˈkeɪʃən", "эпликэ́йшэн"],
@@ -1069,10 +1073,7 @@ const NOUNS = [
   ["avalanche", "лавина", "ˈævəlæntʃ", "э́вэлэнч"],
   ["balcony", "балкон", "ˈbælkəni", "бэ́лкэни"],
   ["bandage", "бинт, повязка", "ˈbændɪdʒ", "бэ́ндидж"],
-  ["bank card", "банковская карта", "bæŋk kɑːrd", "бэнк кард"],
-  ["battery", "батарея, аккумулятор", "ˈbætəri", "бэ́тэри"],
   ["behavior", "поведение", "bɪˈheɪvjər", "бихэ́йвйэр"],
-  ["beta version", "бета-версия", "ˈbeɪtə ˈvɜːrʒən", "бэ́йтэ вёржэн"],
   ["bleach", "отбеливатель", "bliːtʃ", "блич"],
   ["block of flats", "многоквартирный дом", "blɒk əv flæts", "блок эв флэтс"],
   ["blocked nose", "заложенный нос", "blɒkt noʊz", "блокт ноуз"],
@@ -1083,71 +1084,44 @@ const NOUNS = [
   ["builder", "строитель", "ˈbɪldər", "би́лдэр"],
   ["bunch", "несколько, кучка", "bʌntʃ", "банч"],
   ["business trip", "командировка", "ˈbɪznɪs trɪp", "би́знис трип"],
-  ["button", "кнопка", "ˈbʌtən", "ба́тэн"],
   ["cabinet", "шкафчик", "ˈkæbɪnɪt", "кэ́бинит"],
-  ["camera", "камера", "ˈkæmərə", "кэ́мэрэ"],
   ["carrier", "перевозчик", "ˈkæriər", "кэ́риэр"],
-  ["case", "чехол", "keɪs", "кэйс"],
-  ["cash", "наличные", "kæʃ", "кэш"],
-  ["cash desk", "касса", "kæʃ desk", "кэш дэск"],
-  ["castle", "замок", "ˈkæsəl", "кэ́сэл"],
-  ["celebration", "празднование", "ˌselɪˈbreɪʃən", "селибрэ́йшэн"],
   ["central heating", "центральное отопление", "ˈsentrəl ˈhiːtɪŋ", "сэ́нтрэл хи́тинг"],
   ["certificate", "справка, сертификат", "sərˈtɪfɪkɪt", "сэрти́фикит"],
   ["change", "изменение", "tʃeɪndʒ", "чейндж"],
   ["charger", "зарядное устройство", "ˈtʃɑːrdʒər", "ча́рджэр"],
-  ["chicken", "курица", "ˈtʃɪkɪn", "чи́кин"],
-  ["cleaning service", "клининговая услуга", "ˈkliːnɪŋ ˈsɜːrvɪs", "кли́нинг сёрвис"],
   ["client", "клиент", "ˈklaɪənt", "кла́йэнт"],
   ["cloth", "тряпка", "klɒθ", "клос"],
   ["clue", "улика, подсказка", "kluː", "клу"],
   ["coach", "междугородний автобус", "koʊtʃ", "коутч"],
   ["colleague", "коллега", "ˈkɒliːɡ", "ко́лиг"],
   ["collector", "коллекционер", "kəˈlektər", "колэ́ктэр"],
-  ["community", "сообщество", "kəˈmjuːnɪti", "комью́нити"],
-  ["company", "компания", "ˈkʌmpəni", "ка́мпэни"],
   ["competition", "соревнование, конкурс", "ˌkɒmpɪˈtɪʃən", "компити́шэн"],
   ["concept", "концепция", "ˈkɒnsept", "ко́нсэпт"],
-  ["conference", "конференция", "ˈkɒnfərəns", "ко́нфэрэнс"],
   ["confidence", "уверенность", "ˈkɒnfɪdəns", "ко́нфидэнс"],
   ["conflict", "конфликт", "ˈkɒnflɪkt", "ко́нфликт"],
-  ["connection", "связь, соединение", "kəˈnekʃən", "конэ́кшэн"],
   ["construction site", "стройка", "kənˈstrʌkʃən saɪt", "констра́кшэн сайт"],
-  ["contact", "контакт", "ˈkɒntækt", "ко́нтэкт"],
-  ["content", "контент", "ˈkɒntent", "ко́нтэнт"],
   ["contest", "конкурс", "ˈkɒntest", "ко́нтэст"],
   ["contract", "договор", "ˈkɒntrækt", "ко́нтрэкт"],
   ["cost", "стоимость", "kɒst", "кост"],
-  ["costume", "костюм", "ˈkɒstjuːm", "ко́стьюм"],
   ["cough", "кашель", "kɒf", "коф"],
   ["cough syrup", "сироп от кашля", "kɒf ˈsɪrəp", "коф си́рэп"],
   ["cousin", "двоюродный брат/сестра", "ˈkʌzɪn", "ка́зин"],
   ["crowd", "толпа", "kraʊd", "крауд"],
-  ["crown", "корона", "kraʊn", "краун"],
   ["cuisine", "кухня, национальная кухня", "kwɪˈziːn", "квизи́н"],
   ["cupboard", "шкаф для посуды", "ˈkʌbərd", "ка́бэрд"],
   ["curiosity", "любопытство", "ˌkjʊəriˈɒsɪti", "кьюриосити"],
   ["customer", "клиент, покупатель", "ˈkʌstəmər", "ка́стэмэр"],
   ["customs", "таможня", "ˈkʌstəmz", "ка́стэмз"],
-  ["data", "данные", "ˈdeɪtə", "дэ́йтэ"],
-  ["deadline", "дедлайн, крайний срок", "ˈdedlaɪn", "дэ́длайн"],
   ["decision", "решение, выбор", "dɪˈsɪʒən", "диси́жэн"],
-  ["deer", "олень", "dɪər", "диэр"],
   ["definition", "определение", "ˌdefɪˈnɪʃən", "дефини́шэн"],
-  ["dehumidifier", "осушитель воздуха", "diːhjuːˈmɪdɪfaɪər", "дихьюми́дифайэр"],
   ["delay", "задержка", "dɪˈleɪ", "дилэ́й"],
   ["deposit", "депозит", "dɪˈpɒzɪt", "депо́зит"],
-  ["design", "дизайн", "dɪˈzaɪn", "диза́йн"],
-  ["dessert", "десерт", "dɪˈzɜːrt", "дизёрт"],
   ["destination", "место назначения", "ˌdestɪˈneɪʃən", "дэстинэ́йшэн"],
-  ["detail", "деталь", "ˈdiːteɪl", "ди́тэйл"],
-  ["detective", "детектив", "dɪˈtektɪv", "детэ́ктив"],
   ["detergent", "моющее средство", "dɪˈtɜːrdʒənt", "дитёрджэнт"],
   ["developer", "разработчик", "dɪˈveləpər", "дивэ́лэпэр"],
-  ["director", "директор", "dɪˈrektər", "дирэ́ктэр"],
   ["dishwasher", "посудомоечная машина", "ˈdɪʃwɒʃər", "ди́шуошэр"],
   ["dizziness", "головокружение", "ˈdɪzɪnɪs", "ди́зинис"],
-  ["document", "документ", "ˈdɒkjəmənt", "до́кьюмэнт"],
   ["dustpan", "совок", "ˈdʌstpæn", "да́стпэн"],
   ["earthquake", "землетрясение", "ˈɜːrθkweɪk", "ёрскуэйк"],
   ["embankment", "набережная", "ɪmˈbæŋkmənt", "имбэ́нкмэнт"],
@@ -1155,7 +1129,6 @@ const NOUNS = [
   ["employer", "работодатель", "ɪmˈplɔɪər", "импло́йэр"],
   ["entrepreneur", "предприниматель", "ˌɒntrəprəˈnɜːr", "онтрэпрэнёр"],
   ["envelope", "конверт", "ˈenvəloʊp", "э́нвэлоуп"],
-  ["event organizer", "организатор мероприятия", "ɪˈvent ˈɔːrɡənaɪzər", "ивэ́нт о́ргэнайзэр"],
   ["exam", "экзамен", "ɪɡˈzæm", "игзэ́м"],
   ["examiner", "экзаменатор", "ɪɡˈzæmɪnər", "игзэ́минэр"],
   ["excitement", "воодушевление", "ɪkˈsaɪtmənt", "икса́йтмэнт"],
@@ -1175,43 +1148,32 @@ const NOUNS = [
   ["firefighter", "пожарный", "ˈfaɪərfaɪtər", "фа́йэрфайтэр"],
   ["flight", "рейс", "flaɪt", "флайт"],
   ["flu", "грипп", "fluː", "флу"],
-  ["forest", "лес", "ˈfɒrɪst", "фо́рист"],
-  ["fox", "лиса", "fɒks", "фокс"],
   ["frame", "рама", "freɪm", "фрэйм"],
   ["freezer", "морозилка", "ˈfriːzər", "фри́зэр"],
   ["fridge", "холодильник", "frɪdʒ", "фридж"],
   ["gallery", "галерея", "ˈɡæləri", "гэ́лэри"],
   ["gloves", "перчатки", "ɡlʌvz", "главз"],
   ["goal", "цель", "ɡoʊl", "гоул"],
-  ["goose", "гусь", "ɡuːs", "гус"],
   ["guard", "охранник, стражник", "ɡɑːrd", "гард"],
   ["guest", "гость", "ɡest", "гэст"],
   ["gym", "спортзал", "dʒɪm", "джим"],
   ["habit", "привычка", "ˈhæbɪt", "хэ́бит"],
-  ["handle", "ручка", "ˈhændəl", "хэ́ндэл"],
   ["hangover", "похмелье", "ˈhæŋoʊvər", "хэ́нговэр"],
   ["happiness", "счастье", "ˈhæpɪnɪs", "хэ́пинис"],
   ["headache", "головная боль", "ˈhedeɪk", "хэ́дэйк"],
   ["headphones", "наушники", "ˈhedfоʊnz", "хэ́дфоунз"],
   ["health insurance", "медицинская страховка", "helθ ɪnˈʃʊərəns", "хэлс иншу́рэнс"],
-  ["hen", "курица", "hen", "хэн"],
   ["hill", "холм", "hɪl", "хил"],
   ["idea", "идея", "aɪˈdɪə", "айди́э"],
   ["illness", "болезнь", "ˈɪlnɪs", "и́лнис"],
-  ["immigration center", "иммиграционный центр", "ˌɪmɪˈɡreɪʃən ˈsentər", "имигрэ́йшэн сэ́нтэр"],
   ["information", "информация", "ˌɪnfərˈmeɪʃən", "инфэрмэ́йшэн"],
-  ["ingredient", "ингредиент", "ɪnˈɡriːdiənt", "ингри́диэнт"],
   ["injury", "травма", "ˈɪndʒəri", "и́нджэри"],
-  ["interface", "интерфейс", "ˈɪntərfeɪs", "и́нтэрфэйс"],
-  ["interior", "интерьер", "ɪnˈtɪəriər", "инти́риэр"],
   ["investor", "инвестор", "ɪnˈvestər", "инвэ́стэр"],
   ["invoice", "счёт", "ˈɪnvɔɪs", "и́нвойс"],
-  ["journal", "дневник", "ˈdʒɜːrnəl", "джёрнэл"],
   ["journalist", "журналист", "ˈdʒɜːrnəlɪst", "джёрнэлист"],
   ["kingdom", "королевство", "ˈkɪŋdəm", "ки́нгдэм"],
   ["kitchen cabinet", "кухонный шкаф", "ˈkɪtʃɪn ˈkæbɪnɪt", "ки́чин кэ́бинит"],
   ["knowledge", "знание", "ˈnɒlɪdʒ", "но́лидж"],
-  ["landlord", "арендодатель", "ˈlændlɔːrd", "лэ́ндлорд"],
   ["launch", "запуск", "lɔːntʃ", "лонч"],
   ["laundry", "стирка, бельё", "ˈlɔːndri", "ло́ндри"],
   ["lawyer", "юрист", "ˈlɔɪər", "ло́йэр"],
@@ -1221,26 +1183,15 @@ const NOUNS = [
   ["legend", "легенда", "ˈledʒənd", "лэ́джэнд"],
   ["lesson", "урок", "ˈlesən", "лэ́сэн"],
   ["lifestyle", "образ жизни", "ˈlaɪfstaɪl", "ла́йфстайл"],
-  ["line", "линия связи", "laɪn", "лайн"],
   ["llama", "лама", "ˈlɑːmə", "ла́мэ"],
   ["load", "много, куча", "loʊd", "лоуд"],
   ["magic wand", "волшебная палочка", "ˈmædʒɪk wɒnd", "мэ́джик уонд"],
-  ["manager", "менеджер", "ˈmænɪdʒər", "мэ́нэджэр"],
-  ["marker", "маркер", "ˈmɑːrkər", "ма́ркэр"],
-  ["mayor", "мэр", "meɪər", "мэ́йэр"],
   ["mechanic", "механик", "mɪˈkænɪk", "микэ́ник"],
   ["medicine", "лекарство", "ˈmedɪsɪn", "мэ́дисин"],
   ["meeting", "встреча", "ˈmiːtɪŋ", "ми́тинг"],
   ["memory", "память, воспоминание", "ˈmeməri", "мэ́мэри"],
-  ["message", "сообщение", "ˈmesɪdʒ", "мэ́сидж"],
-  ["metro", "метро", "ˈmetroʊ", "мэ́троу"],
-  ["microphone", "микрофон", "ˈmaɪkrəfoʊn", "ма́йкрофоун"],
-  ["mirror", "зеркало", "ˈmɪrər", "ми́рэр"],
   ["mistake", "ошибка", "mɪˈsteɪk", "мистэ́йк"],
-  ["mobile data", "мобильный интернет", "ˈmoʊbaɪl ˈdeɪtə", "мо́убайл дэ́йтэ"],
-  ["mobile phone", "мобильный телефон", "ˈmoʊbaɪl foʊn", "мо́убайл фоун"],
   ["mop", "швабра", "mɒp", "моп"],
-  ["motivation", "мотивация", "ˌmoʊtɪˈveɪʃən", "моутивэ́йшэн"],
   ["muscle", "мышца", "ˈmʌsəl", "ма́сэл"],
   ["mushroom", "гриб", "ˈmʌʃruːm", "ма́шрум"],
   ["mustache", "усы", "ˈmʌstæʃ", "ма́стэш"],
@@ -1251,7 +1202,6 @@ const NOUNS = [
   ["neighbor", "сосед", "ˈneɪbər", "нэ́йбэр"],
   ["nephew", "племянник", "ˈnefjuː", "нэ́фью"],
   ["niece", "племянница", "niːs", "нис"],
-  ["no service", "нет сети", "noʊ ˈsɜːrvɪs", "ноу сёрвис"],
   ["notary", "нотариус", "ˈnoʊtəri", "но́утэри"],
   ["nutrition", "питание", "njuːˈtrɪʃən", "ньютри́шэн"],
   ["observer", "наблюдатель", "əbˈzɜːrvər", "эбзёрвэр"],
@@ -1260,34 +1210,25 @@ const NOUNS = [
   ["ornament", "украшение", "ˈɔːrnəmənt", "о́рнэмэнт"],
   ["outfit", "наряд", "ˈaʊtfɪt", "а́утфит"],
   ["owner", "владелец", "ˈoʊnər", "о́унэр"],
-  ["ox", "бык", "ɒks", "окс"],
-  ["paddleboarding", "падлбординг", "ˈpædəlbɔːrdɪŋ", "пэ́дэлбординг"],
   ["painkiller", "обезболивающее", "ˈpeɪnkɪlər", "пэ́йнкилэр"],
-  ["palace", "дворец", "ˈpælɪs", "пэ́лис"],
   ["participant", "участник", "pɑːrˈtɪsɪpənt", "парти́сипэнт"],
   ["participation", "участие", "pɑːrˌtɪsɪˈpeɪʃən", "партисипэ́йшэн"],
-  ["passport control", "паспортный контроль", "ˈpæspɔːrt kənˈtroʊl", "пэ́спорт контро́ул"],
-  ["password", "пароль", "ˈpæswɜːrd", "пэ́суёрд"],
   ["patch", "патч, наклейка/патч", "pætʃ", "пэтч"],
   ["path", "тропа", "pæθ", "пэс"],
   ["patience", "терпение", "ˈpeɪʃəns", "пэ́йшэнс"],
   ["payment", "оплата", "ˈpeɪmənt", "пэ́ймэнт"],
-  ["pharmacy", "аптека", "ˈfɑːrməsi", "фа́рмэси"],
   ["physical activity", "физическая активность", "ˈfɪzɪkəl ækˈtɪvɪti", "фи́зикэл экти́вити"],
   ["pilot", "пилот", "ˈpaɪlət", "па́йлэт"],
-  ["PIN code", "пин-код", "pɪn koʊd", "пин коуд"],
   ["plaster", "пластырь", "ˈplæstər", "плэ́стэр"],
   ["plenty", "много", "ˈplenti", "плэ́нти"],
   ["power", "власть, сила", "ˈpaʊər", "па́уэр"],
   ["power of attorney", "доверенность", "ˈpaʊər əv əˈtɜːrni", "па́уэр эв этёрни"],
   ["pre-made ingredient", "заготовка", "priːmeɪd ɪnˈɡriːdiənt", "примэ́йд ингри́диэнт"],
-  ["presentation", "презентация", "ˌprezənˈteɪʃən", "прэзэнтэ́йшэн"],
   ["price", "цена", "praɪs", "прайс"],
   ["pride", "гордость", "praɪd", "прайд"],
   ["privacy", "приватность", "ˈpraɪvəsi", "пра́йвэси"],
   ["prize", "приз", "praɪz", "прайз"],
   ["progress", "прогресс", "ˈprɒɡres", "про́грэс"],
-  ["project", "проект", "ˈprɒdʒekt", "про́джэкт"],
   ["promise", "обещание", "ˈprɒmɪs", "про́мис"],
   ["psychiatrist", "психиатр", "saɪˈkaɪətrɪst", "сайка́йэтрист"],
   ["psychologist", "психолог", "saɪˈkɒlədʒɪst", "сайко́лэджист"],
@@ -1298,8 +1239,6 @@ const NOUNS = [
   ["reason", "причина", "ˈriːzən", "ри́зэн"],
   ["receipt", "чек", "rɪˈsiːt", "риси́т"],
   ["reception", "приём, сигнал", "rɪˈsepʃən", "рисэ́пшэн"],
-  ["reception desk", "стойка регистрации", "rɪˈsepʃən desk", "рисэ́пшэн дэск"],
-  ["receptionist", "администратор", "rɪˈsepʃənɪst", "рисэ́пшэнист"],
   ["recipe", "рецепт", "ˈresɪpi", "рэ́сипи"],
   ["recipe book", "кулинарная книга", "ˈresɪpi bʊk", "рэ́сипи бук"],
   ["regret", "сожаление", "rɪˈɡret", "ригрэ́т"],
@@ -1309,7 +1248,6 @@ const NOUNS = [
   ["repairman", "ремонтник", "rɪˈperˌmæn", "рипэ́рмэн"],
   ["report", "отчёт", "rɪˈpɔːrt", "рипо́рт"],
   ["reputation", "репутация", "ˌrepjʊˈteɪʃən", "рэпьютэ́йшэн"],
-  ["residence permit", "ВНЖ", "ˈrezɪdəns ˈpɜːrmɪt", "рэ́зидэнс пёрмит"],
   ["responsibility", "ответственность", "rɪˌspɒnsɪˈbɪlɪti", "риспонсиби́лити"],
   ["ride", "поездка", "raɪd", "райд"],
   ["river", "река", "ˈrɪvər", "ри́вэр"],
@@ -1317,30 +1255,21 @@ const NOUNS = [
   ["roommate", "сосед по комнате/квартире", "ˈruːmmeɪt", "ру́ммэйт"],
   ["roundabout", "круговое движение", "ˈraʊndəbaʊt", "ра́ундэбаут"],
   ["routine", "рутина, режим", "ruːˈtiːn", "рути́н"],
-  ["ruler", "правитель", "ˈruːlər", "ру́лэр"],
   ["runny nose", "насморк", "ˈrʌni noʊz", "ра́ни ноуз"],
   ["schedule", "расписание", "ˈskedʒuːl", "скэ́джул"],
-  ["screen", "экран", "skriːn", "скрин"],
-  ["screen lock", "блокировка экрана", "skriːn lɒk", "скрин лок"],
   ["seafood", "морепродукты", "ˈsiːfuːd", "си́фуд"],
   ["seaside", "морская набережная", "ˈsiːsaɪd", "си́сайд"],
-  ["servant", "слуга", "ˈsɜːrvənt", "сёрвэнт"],
   ["server", "сервер", "ˈsɜːrvər", "сёрвэр"],
   ["service", "услуга, служение", "ˈsɜːrvɪs", "сёрвис"],
   ["settings", "настройки", "ˈsetɪŋz", "сэ́тингз"],
   ["sheet", "простыня", "ʃiːt", "шит"],
   ["sick leave", "больничный", "sɪk liːv", "сик лив"],
-  ["signal", "сигнал", "ˈsɪɡnəl", "си́гнэл"],
-  ["SIM card", "SIM-карта", "sɪm kɑːrd", "сим кард"],
   ["sink", "раковина", "sɪŋk", "синк"],
   ["sleeping pill", "снотворное", "ˈsliːpɪŋ pɪl", "сли́пинг пил"],
-  ["smartphone", "смартфон", "ˈsmɑːrtfoʊn", "смарт фоун"],
   ["soap", "мыло", "soʊp", "соуп"],
-  ["social media", "соцсети", "ˈsoʊʃəl ˈmiːdiə", "со́ушэл ми́диэ"],
   ["software", "программное обеспечение", "ˈsɒftweər", "со́фтуэр"],
   ["solution", "решение", "səˈluːʃən", "солю́шэн"],
   ["sore throat", "больное горло", "sɔːr θroʊt", "сор сроут"],
-  ["speaker", "динамик, колонка", "ˈspiːkər", "спи́кэр"],
   ["sponge", "губка", "spʌndʒ", "спандж"],
   ["stage", "сцена", "steɪdʒ", "стэйдж"],
   ["startup", "стартап", "ˈstɑːrtʌp", "ста́ртап"],
@@ -1350,51 +1279,36 @@ const NOUNS = [
   ["storm", "шторм", "stɔːrm", "сторм"],
   ["stranger", "незнакомец", "ˈstreɪndʒər", "стрэ́йнджэр"],
   ["subject", "предмет", "ˈsʌbdʒɪkt", "са́бджикт"],
-  ["subway", "метро", "ˈsʌbweɪ", "са́бвэй"],
   ["success", "успех", "səkˈses", "саксэ́с"],
   ["sunrise", "рассвет", "ˈsʌnraɪz", "са́нрайз"],
   ["sunshine", "солнечный свет", "ˈsʌnʃaɪn", "са́ншайн"],
   ["surprise", "сюрприз, удивление", "sərˈpraɪz", "сэрпра́йз"],
   ["symptom", "симптом", "ˈsɪmptəm", "си́мптэм"],
-  ["talent show", "шоу талантов", "ˈtælənt ʃoʊ", "тэ́лэнт шоу"],
   ["task", "задача", "tæsk", "тэск"],
   ["team", "команда", "tiːm", "тим"],
-  ["telemedicine", "телемедицина", "ˈtelɪmedɪsɪn", "тэ́лимэдисин"],
   ["temptation", "соблазн", "tempˈteɪʃən", "тэмптэ́йшэн"],
-  ["text message", "текстовое сообщение", "tekst ˈmesɪdʒ", "тэкст мэ́сидж"],
-  ["throne", "трон", "θroʊn", "сроун"],
-  ["touchscreen", "сенсорный экран", "ˈtʌtʃskriːn", "та́чскрин"],
   ["tour", "тур", "tʊər", "туэр"],
   ["tower", "башня", "ˈtaʊər", "та́уэр"],
   ["tradition", "традиция", "trəˈdɪʃən", "трэди́шэн"],
   ["traffic", "движение, трафик", "ˈtræfɪk", "трэ́фик"],
   ["traffic light", "светофор", "ˈtræfɪk laɪt", "трэ́фик лайт"],
-  ["translation agency", "бюро переводов", "trænsˈleɪʃən ˈeɪdʒənsi", "трэнслэ́йшэн э́йджэнси"],
   ["trash", "мусор", "træʃ", "трэш"],
   ["treatment", "лечение", "ˈtriːtmənt", "три́тмэнт"],
   ["treehouse", "домик на дереве", "ˈtriːhaʊs", "три́хаус"],
   ["truth", "правда", "truːθ", "трус"],
-  ["underground", "метро", "ˈʌndərɡraʊnd", "а́ндэрграунд"],
-  ["underground passage", "подземный переход", "ˈʌndərɡraʊnd ˈpæsɪdʒ", "а́ндэрграунд пэ́сидж"],
-  ["university", "университет", "ˌjuːnɪˈvɜːrsɪti", "юнивёрсити"],
-  ["update", "обновление", "ˈʌpdeɪt", "а́пдэйт"],
   ["vaccination", "вакцинация", "ˌvæksɪˈneɪʃən", "вэксинэ́йшэн"],
   ["vacuum cleaner", "пылесос", "ˈvækjuːm ˈkliːnər", "вэ́кьюм кли́нэр"],
   ["value", "ценность", "ˈvæljuː", "вэ́лью"],
   ["venue", "площадка, место проведения", "ˈvenjuː", "вэ́нью"],
-  ["version", "версия", "ˈvɜːrʒən", "вёржэн"],
   ["view", "вид", "vjuː", "вью"],
   ["village", "деревня", "ˈvɪlɪdʒ", "ви́лидж"],
   ["villain", "злодей", "ˈvɪlən", "ви́лэн"],
-  ["voicemail", "голосовая почта", "ˈvɔɪsmeɪl", "во́йсмэйл"],
   ["volunteer work", "волонтёрская работа", "ˌvɒlənˈtɪər wɜːrk", "волэнти́р уёрк"],
-  ["waitress", "официантка", "ˈweɪtrɪs", "уэ́йтрис"],
   ["wand", "палочка", "wɒnd", "уонд"],
   ["warmth", "теплота", "wɔːrmθ", "уормс"],
   ["warranty", "гарантия", "ˈwɒrənti", "уо́рэнти"],
   ["washing machine", "стиральная машина", "ˈwɒʃɪŋ məˈʃiːn", "уо́шинг мэши́н"],
   ["washing powder", "стиральный порошок", "ˈwɒʃɪŋ ˈpaʊdər", "уо́шинг па́удэр"],
-  ["Wi-Fi", "вай-фай", "ˈwaɪfaɪ", "уа́йфай"],
   ["wind", "ветер", "wɪnd", "уинд"],
   ["wound", "рана", "wuːnd", "вунд"],
   ["writer", "писатель", "ˈraɪtər", "ра́йтэр"],
@@ -1414,7 +1328,6 @@ const NOUNS = [
   ["harm", "вред", "hɑːrm", "харм"],
   ["hood", "капот", "hʊd", "худ"],
   ["income", "доход", "ˈɪnkʌm", "и́нкам"],
-  ["influencer", "инфлюенсер", "ˈɪnfluənsər", "и́нфлуэнсэр"],
   ["infrastructure", "инфраструктура", "ˈɪnfrəˌstrʌktʃər", "и́нфрэстрактчэр"],
   ["injection", "укол, инъекция", "ɪnˈdʒekʃən", "инджэ́кшэн"],
   ["inspiration", "вдохновение", "ˌɪnspɪˈreɪʃən", "инспирэ́йшэн"],
@@ -1435,12 +1348,10 @@ const NOUNS = [
   ["route", "маршрут", "ruːt", "рут"],
   ["scam", "мошенничество", "skæm", "скэм"],
   ["seizure", "приступ", "ˈsiːʒər", "си́жэр"],
-  ["spam", "спам", "spæm", "спэм"],
   ["supplier", "поставщик", "səˈplaɪər", "сэпла́йэр"],
   ["thread", "цепочка сообщений", "θred", "срэд"],
   ["tire shop", "шиномонтаж", "ˈtaɪər ʃɒp", "та́йэр шоп"],
   ["typo", "опечатка", "ˈtaɪpoʊ", "та́йпоу"],
-  ["username", "имя пользователя", "ˈjuːzərneɪm", "ю́зэрнэйм"],
 ];
 const PHRASAL = [
   ["ask out", "пригласить на свидание", "æsk aʊt", "эск аут"],
@@ -1584,7 +1495,7 @@ const PHRASAL = [
   ["walk away", "уходить", "wɔːk əˈweɪ", "уок эуэ́й"],
   ["watch out", "быть осторожным", "wɒtʃ aʊt", "уоч аут"],
   ["wind up", "оказаться", "waɪnd ʌp", "уайнд ап"],
-  ["write down", "записывать", "", "райт даун"],
+  ["write down", "записывать", "raɪt daʊn", "райт даун"],
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2347,16 +2258,19 @@ async function addWord() {
     if (!ru || !v1 || !v2 || !v3) { showMsg(msg, '⚠ Заполни все поля', false); return; }
     if (getList().find(v => v[0] === v1)) { showMsg(msg, '⚠ "' + v1 + '" уже есть в словаре', false); return; }
     deleted.delete('verbs:' + v1);
+    const manualReadV = document.getElementById('av-read').value.trim();
     const inBuiltinV = VERBS.find(v => v[0] === v1);
-    let ipa = '', read = '';
+    let ipa = '', read = manualReadV;
     if (!inBuiltinV) {
       showMsg(msg, '⏳ Загружаю транскрипцию...', true);
       const pron = await fetchPron(v1);
-      ipa = pron.ipa; read = pron.read;
+      ipa = pron.ipa;
       customVerbs.push([v1, v2, v3, ru, ipa, read]);
+    } else if (manualReadV) {
+      inBuiltinV[5] = manualReadV;
     }
     saveStorage(); updateLogo();
-    ['av-ru','av-v1','av-v2','av-v3'].forEach(id => { document.getElementById(id).value = ''; });
+    ['av-ru','av-v1','av-v2','av-v3','av-read'].forEach(id => { document.getElementById(id).value = ''; });
     showMsg(msg, '✓ "' + v1 + '" добавлен!' + (ipa ? ' [' + ipa + '] ' + read : ''), true);
     renderCustomList(); renderBrowse();
   } else {
@@ -2366,19 +2280,22 @@ async function addWord() {
     if (!ru || !en) { showMsg(msg, '⚠ Заполни все поля', false); return; }
     if (getList().find(v => v[0] === en)) { showMsg(msg, '⚠ "' + en + '" уже есть в словаре', false); return; }
     deleted.delete(cat + ':' + en);
+    const manualReadS = document.getElementById('as-read').value.trim();
     const builtinA  = cat === 'adj' ? ADJS : cat === 'nouns' ? NOUNS : PHRASAL;
     const inBuiltin = builtinA.find(v => v[0] === en);
-    let ipa = '', read = '';
+    let ipa = '', read = manualReadS;
     if (!inBuiltin) {
       showMsg(msg, '⏳ Загружаю транскрипцию...', true);
       const pron = await fetchPron(en);
-      ipa = pron.ipa; read = pron.read;
+      ipa = pron.ipa;
       if      (cat === 'adj')   customAdjs.push([en, ru, ipa, read]);
       else if (cat === 'nouns') customNouns.push([en, ru, ipa, read]);
       else                      customPhrasal.push([en, ru, ipa, read]);
+    } else if (manualReadS) {
+      inBuiltin[3] = manualReadS;
     }
     saveStorage(); updateLogo();
-    ['as-ru','as-en'].forEach(id => { document.getElementById(id).value = ''; });
+    ['as-ru','as-en','as-read'].forEach(id => { document.getElementById(id).value = ''; });
     showMsg(msg, '✓ "' + en + '" добавлено!' + (ipa ? ' [' + ipa + '] ' + read : ''), true);
     renderCustomList(); renderBrowse();
   }
