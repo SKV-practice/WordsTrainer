@@ -244,6 +244,13 @@ header {
 .detail-form-val   { font-family: "JetBrains Mono", monospace; font-size: .82rem; color: var(--text); }
 .expand-arrow { font-size: .7rem; color: var(--muted); transition: transform .2s; display: inline-block; margin-left: 4px; }
 .expand-arrow.open { transform: rotate(90deg); }
+.btn-retry-pron {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+  font-family: inherit; font-size: .76rem; font-weight: 500;
+  padding: 5px 12px; border-radius: 8px; cursor: pointer; transition: .12s;
+}
+.btn-retry-pron:hover { border-color: var(--accent2); color: var(--accent2); }
+.btn-retry-pron:disabled { opacity: .6; cursor: default; }
 @media (max-width: 1449px) {
   .desktop-only { display: none !important; }
 }
@@ -2045,12 +2052,18 @@ function buildExpandRow(rowId, v, c) {
       + '<div class="detail-form"><span class="detail-form-label">V3</span><span class="detail-form-val">'+v[2]+'</span></div>'
       + '</div>';
   }
+  const safeW = v[0].replace(/&/g,'&amp;').replace(/"/g,'&quot;');
   const pronHtml = (ipa || read)
     ? '<div class="detail-pron">'
       + (ipa  ? '<span class="detail-ipa">['+ipa+']</span>' : '')
       + (read ? '<span class="detail-read">'+read+'</span>' : '')
       + '</div>'
-    : '';
+    : '<div class="detail-pron">'
+      + '<button class="btn-retry-pron" data-cat="'+c+'" data-word="'+safeW+'">&#128260; Загрузить транскрипцию</button>'
+      + '</div>';
+  if (!formsHtml && !(ipa || read) && c !== 'verbs') {
+    // still show retry button even with no formsHtml
+  }
   if (!pronHtml && !formsHtml) return '';
   return '<tr class="detail-row hidden" id="detail-'+rowId+'"><td colspan="10">'
     + '<div class="detail-inner">'+pronHtml+formsHtml+'</div>'
@@ -2077,7 +2090,7 @@ function renderBrowse() {
   function mainRow(v, cells) {
     const rid     = btoa(cat + ':' + v[0]).replace(/=/g, '');
     const ru      = getRu(cat, v);
-    const hasDetail = (cat === 'verbs') || !!(v[2] || v[3]);
+    const hasDetail = true; // always show detail row (pronunciation or retry button)
     const arrow   = hasDetail ? '<span class="expand-arrow" id="arrow-'+rid+'">&#9654;</span>' : '';
     const safeW   = v[0].replace(/&/g,'&amp;').replace(/"/g,'&quot;');
     const safeRu  = ru.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
@@ -2221,11 +2234,45 @@ function renderAdd() {
   renderCustomList();
 }
 
+// Retry fetching pronunciation for a word that's missing it
+async function retryPron(c, word) {
+  const ipa_read = await fetchPron(word);
+  if (!ipa_read.ipa && !ipa_read.read) return false;
+  // Find the entry in builtin or custom arrays and update it
+  function updateArr(arr) {
+    const entry = arr.find(v => v[0] === word);
+    if (entry) {
+      if (c === 'verbs') { entry[4] = ipa_read.ipa; entry[5] = ipa_read.read; }
+      else               { entry[2] = ipa_read.ipa; entry[3] = ipa_read.read; }
+      return true;
+    }
+    return false;
+  }
+  if (c === 'verbs') {
+    if (!updateArr(VERBS)) updateArr(customVerbs);
+  } else if (c === 'adj') {
+    if (!updateArr(ADJS)) updateArr(customAdjs);
+  } else if (c === 'nouns') {
+    if (!updateArr(NOUNS)) updateArr(customNouns);
+  } else {
+    if (!updateArr(PHRASAL)) updateArr(customPhrasal);
+  }
+  saveStorage();
+  renderBrowse();
+  return true;
+}
+
 async function fetchPron(word) {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 100,
@@ -2235,6 +2282,7 @@ async function fetchPron(word) {
         }]
       })
     });
+    clearTimeout(timeoutId);
     if (!res.ok) return { ipa: '', read: '' };
     const data = await res.json();
     const text = data.content && data.content[0] ? data.content[0].text : '';
@@ -2411,11 +2459,19 @@ async function runImport() {
     // 5. "word translation" (space separated — last word(s) are Russian)
     let left = '', ru = '';
 
-    if (line.includes('-') || line.includes('—')) {
+    // Prefer splitting at the Cyrillic boundary first (handles hyphenated
+    // English words like "laid-back" without breaking on the wrong hyphen)
+    const cyrMatch = line.match(/^([a-zA-Z0-9\/\s-]+?)\s*[-—]?\s*([а-яёА-ЯЁ].*)$/);
+
+    if (cyrMatch && cyrMatch[1].trim()) {
+      left = cyrMatch[1].trim().replace(/[-—]+$/, '').trim();
+      ru   = cyrMatch[2].trim();
+    } else if (line.includes('-') || line.includes('—')) {
       // Format: word - translation
       const m = line.match(/^(.+?)\s*[-—]\s*(.+)$/);
       if (m) { left = m[1].trim(); ru = m[2].trim(); }
     } else if (line.includes('	')) {
+
       // Tab separated
       const parts = line.split('	').map(p => p.trim()).filter(p => p);
       if (parts.length === 2) {
@@ -2507,12 +2563,23 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('tbl-body').addEventListener('click', function(e) {
     const editBtn = e.target.closest('.btn-edit');
     const delBtn  = e.target.closest('.btn-del');
+    const retryBtn = e.target.closest('.btn-retry-pron');
     if (editBtn) {
       e.stopPropagation();
       startInlineEdit(editBtn.dataset.cat, editBtn.dataset.word, editBtn.dataset.ru);
     } else if (delBtn) {
       e.stopPropagation();
       deleteWord(delBtn.dataset.cat, delBtn.dataset.word);
+    } else if (retryBtn) {
+      e.stopPropagation();
+      retryBtn.textContent = '⏳ Загрузка...';
+      retryBtn.disabled = true;
+      retryPron(retryBtn.dataset.cat, retryBtn.dataset.word).then(ok => {
+        if (!ok) {
+          retryBtn.textContent = '✗ Не удалось. Нажми ещё раз';
+          retryBtn.disabled = false;
+        }
+      });
     } else {
       const row = e.target.closest('tr.expandable');
       if (row && row.dataset.rid) toggleRow(row.dataset.rid);
