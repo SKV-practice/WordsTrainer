@@ -2281,13 +2281,14 @@ function savePron(c, word, rid) {
 
 async function retryPron(c, word) {
   const ipa_read = await fetchPron(word);
-  if (!ipa_read.ipa && !ipa_read.read) return false;
-  // Find the entry in builtin or custom arrays and update it
+  if (!ipa_read.ipa) return false;
+  // Find the entry in builtin or custom arrays and update only the IPA field
+  // (preserve any manually-entered Russian reading)
   function updateArr(arr) {
     const entry = arr.find(v => v[0] === word);
     if (entry) {
-      if (c === 'verbs') { entry[4] = ipa_read.ipa; entry[5] = ipa_read.read; }
-      else               { entry[2] = ipa_read.ipa; entry[3] = ipa_read.read; }
+      if (c === 'verbs') { entry[4] = ipa_read.ipa; }
+      else               { entry[2] = ipa_read.ipa; }
       return true;
     }
     return false;
