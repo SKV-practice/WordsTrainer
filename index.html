@@ -2231,28 +2231,41 @@ async function addWord() {
     const msg = document.getElementById('av-msg');
     if (!ru || !v1 || !v2 || !v3) { showMsg(msg, '⚠ Заполни все поля', false); return; }
     if (getList().find(v => v[0] === v1)) { showMsg(msg, '⚠ "' + v1 + '" уже есть в словаре', false); return; }
-    showMsg(msg, '⏳ Загружаю транскрипцию...', true);
-    const { ipa, read } = await fetchPron(v1);
-    customVerbs.push([v1, v2, v3, ru, ipa, read]);
+    deleted.delete('verbs:' + v1);
+    const inBuiltinV = VERBS.find(v => v[0] === v1);
+    let ipa = '', read = '';
+    if (!inBuiltinV) {
+      showMsg(msg, '⏳ Загружаю транскрипцию...', true);
+      const pron = await fetchPron(v1);
+      ipa = pron.ipa; read = pron.read;
+      customVerbs.push([v1, v2, v3, ru, ipa, read]);
+    }
     saveStorage(); updateLogo();
     ['av-ru','av-v1','av-v2','av-v3'].forEach(id => { document.getElementById(id).value = ''; });
     showMsg(msg, '✓ "' + v1 + '" добавлен!' + (ipa ? ' [' + ipa + '] ' + read : ''), true);
-    renderCustomList();
+    renderCustomList(); renderBrowse();
   } else {
     const ru  = document.getElementById('as-ru').value.trim();
     const en  = document.getElementById('as-en').value.trim().toLowerCase();
     const msg = document.getElementById('as-msg');
     if (!ru || !en) { showMsg(msg, '⚠ Заполни все поля', false); return; }
     if (getList().find(v => v[0] === en)) { showMsg(msg, '⚠ "' + en + '" уже есть в словаре', false); return; }
-    showMsg(msg, '⏳ Загружаю транскрипцию...', true);
-    const { ipa, read } = await fetchPron(en);
-    if      (cat === 'adj')   customAdjs.push([en, ru, ipa, read]);
-    else if (cat === 'nouns') customNouns.push([en, ru, ipa, read]);
-    else                      customPhrasal.push([en, ru, ipa, read]);
+    deleted.delete(cat + ':' + en);
+    const builtinA  = cat === 'adj' ? ADJS : cat === 'nouns' ? NOUNS : PHRASAL;
+    const inBuiltin = builtinA.find(v => v[0] === en);
+    let ipa = '', read = '';
+    if (!inBuiltin) {
+      showMsg(msg, '⏳ Загружаю транскрипцию...', true);
+      const pron = await fetchPron(en);
+      ipa = pron.ipa; read = pron.read;
+      if      (cat === 'adj')   customAdjs.push([en, ru, ipa, read]);
+      else if (cat === 'nouns') customNouns.push([en, ru, ipa, read]);
+      else                      customPhrasal.push([en, ru, ipa, read]);
+    }
     saveStorage(); updateLogo();
     ['as-ru','as-en'].forEach(id => { document.getElementById(id).value = ''; });
     showMsg(msg, '✓ "' + en + '" добавлено!' + (ipa ? ' [' + ipa + '] ' + read : ''), true);
-    renderCustomList();
+    renderCustomList(); renderBrowse();
   }
 }
 
@@ -2403,15 +2416,32 @@ async function runImport() {
       const v2 = (parts[1] || v1 + 'ed').toLowerCase();
       const v3 = (parts[2] || v2).toLowerCase();
 
-      if (getList().find(v => v[0] === v1)) { skipped++; continue; }
+      const inActiveV  = getList().find(v => v[0] === v1);
+      if (inActiveV) { skipped++; continue; }
+      const inBuiltinV = VERBS.find(v => v[0] === v1);
       deleted.delete('verbs:' + v1);
+      if (inBuiltinV) {
+        added++;
+        saveStorage();
+        continue;
+      }
       const pronV = await fetchPron(v1);
       customVerbs.push([v1, v2, v3, ru, pronV.ipa || '', pronV.read || '']);
       added++;
     } else {
       const en = left.toLowerCase();
-      if (getList().find(v => v[0] === en)) { skipped++; continue; }
+      // Check if word exists in built-in arrays
+      const builtinArr = cat === 'adj' ? ADJS : cat === 'nouns' ? NOUNS : PHRASAL;
+      const inBuiltin  = builtinArr.find(v => v[0] === en);
+      const inActive   = getList().find(v => v[0] === en);
+      if (inActive) { skipped++; continue; }
       deleted.delete(cat + ':' + en);
+      if (inBuiltin) {
+        // Already in built-in — just restore by removing from deleted (done above)
+        added++;
+        saveStorage();
+        continue;
+      }
       const pronS = await fetchPron(en);
       if      (cat === 'adj')     customAdjs.push([en, ru, pronS.ipa || '', pronS.read || '']);
       else if (cat === 'nouns')   customNouns.push([en, ru, pronS.ipa || '', pronS.read || '']);
