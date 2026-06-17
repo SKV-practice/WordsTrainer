@@ -349,6 +349,24 @@ header {
 .ci-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .9rem; padding: 2px 6px; border-radius: 4px; transition: .12s; flex-shrink: 0; }
 .ci-del:hover { color: var(--red); background: #2a0f0f; }
 .empty-list { color: var(--muted); font-size: .86rem; text-align: center; padding: 18px 0; }
+.mistakes-header { margin-bottom: 14px; }
+.mistakes-title-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mistakes-count-label { font-size: .85rem; color: var(--muted); }
+.mistakes-count-label b { color: var(--text); }
+.btn-clear-mistakes {
+  background: transparent; border: 1.5px solid var(--border); color: var(--red);
+  font-family: inherit; font-size: .78rem; padding: 6px 12px; border-radius: 8px; cursor: pointer; transition: .15s;
+}
+.btn-clear-mistakes:hover { background: #2a0f0f; }
+.mistake-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+}
+.mistake-item:last-child { border-bottom: none; }
+.mistake-word { font-family: 'JetBrains Mono', monospace; color: var(--accent2); font-size: .92rem; }
+.mistake-answer { color: var(--muted); font-size: .84rem; flex: 1; text-align: right; margin-right: 8px; }
+.mistake-count { font-size: .72rem; color: var(--muted); background: var(--surface2); padding: 2px 8px; border-radius: 6px; flex-shrink: 0; }
+#mistakes-badge { color: var(--red); font-weight: 700; }
 
 /* ── UTILITIES ── */
 .hidden { display: none !important; }
@@ -458,6 +476,7 @@ header {
   <button class="mode-btn" data-mode="input"  onclick="switchMode('input')">Ввод</button>
   <button class="mode-btn" data-mode="cards"  onclick="switchMode('cards')">Карточки</button>
   <button class="mode-btn" data-mode="browse" onclick="switchMode('browse')">Все слова</button>
+  <button class="mode-btn" data-mode="mistakes" onclick="switchMode('mistakes')">Ошибки <span id="mistakes-badge"></span></button>
   <button class="mode-btn" data-mode="add"    onclick="switchMode('add')">+ Добавить</button>
 </div>
 
@@ -586,6 +605,17 @@ header {
     </table>
   </div>
 
+  <!-- ══ MISTAKES ══ -->
+  <div id="pane-mistakes" class="hidden">
+    <div class="mistakes-header">
+      <div class="mistakes-title-row">
+        <span class="mistakes-count-label">Всего ошибок в этой категории: <b id="mistakes-total">0</b></span>
+        <button class="btn-clear-mistakes" onclick="clearMistakesForCat()">Очистить список</button>
+      </div>
+    </div>
+    <div id="mistakes-list"></div>
+  </div>
+
   <!-- ══ ADD ══ -->
   <div id="pane-add" class="hidden">
     <div id="add-verbs-form" class="add-section">
@@ -663,10 +693,10 @@ const VERBS = [
   ["ban", "banned", "banned", "запрещать", "bæn", "бэн"],
   ["bark", "barked", "barked", "лаять", "bɑːrk", "ба́рк"],
   ["believe", "believed", "believed", "верить", "bɪˈliːv", "били́в"],
-  ["belong", "belonged", "belonged", "принадлежать", "bɪˈlɔːŋ", "bilóнг"],
+  ["belong", "belonged", "belonged", "принадлежать", "bɪˈlɔːŋ", "било́нг"],
   ["bite", "bit", "bitten", "кусать", "baɪt", "байт"],
   ["blow", "blew", "blown", "дуть", "bloʊ", "блоу"],
-  ["borrow", "borrowed", "borrowed", "брать взаймы", "ˈbɒroʊ", "бо́роу"],
+  ["borrow", "borrowed", "borrowed", "брать взаймы", "ˈbɑːroʊ", "ба́роу"],
   ["breathe", "breathed", "breathed", "дышать", "briːð", "бриз"],
   ["build", "built", "built", "строить", "bɪld", "билд"],
   ["cancel", "canceled", "canceled", "отменять", "ˈkænsəl", "кэ́нсэл"],
@@ -692,7 +722,7 @@ const VERBS = [
   ["creep", "crept", "crept", "ползти", "kriːp", "крип"],
   ["cry", "cried", "cried", "плакать", "kraɪ", "край"],
   ["cut", "cut", "cut", "резать", "kʌt", "кат"],
-  ["deal", "dealt", "dealt", "иметь дело", "diːl", "дил"],
+  ["deal", "dealt", "dealt", "иметь дело; разбираться с чем-то", "diːl", "дил"],
   ["decide", "decided", "decided", "решать", "dɪˈsaɪd", "диса́йд"],
   ["decorate", "decorated", "decorated", "украшать", "ˈdekəreɪt", "дэ́корэйт"],
   ["define", "defined", "defined", "определять", "dɪˈfaɪn", "дифа́йн"],
@@ -718,7 +748,7 @@ const VERBS = [
   ["fall", "fell", "fallen", "падать", "fɔːl", "фол"],
   ["feed", "fed", "fed", "кормить", "fiːd", "фид"],
   ["fight", "fought", "fought", "бороться", "faɪt", "файт"],
-  ["fill", "filled", "filled", "наполнять", "fɪl", "фил"],
+  ["fill", "filled", "filled", "заполнять; наполнять", "fɪl", "фил"],
   ["finish", "finished", "finished", "заканчивать", "ˈfɪnɪʃ", "фи́ниш"],
   ["fire", "fired", "fired", "увольнять", "ˈfaɪər", "фа́йэр"],
   ["fit", "fitted", "fitted", "подходить", "fɪt", "фит"],
@@ -733,7 +763,7 @@ const VERBS = [
   ["grow", "grew", "grown", "расти", "ɡroʊ", "гроу"],
   ["hang", "hung", "hung", "вешать", "hæŋ", "хэнг"],
   ["hide", "hid", "hidden", "прятать", "haɪd", "хайд"],
-  ["hire", "hired", "hired", "нанимать", "haɪər", "ха́йэр"],
+  ["hire", "hired", "hired", "нанимать; арендовать", "haɪər", "ха́йэр"],
   ["hiss", "hissed", "hissed", "шипеть", "hɪs", "хис"],
   ["hit", "hit", "hit", "ударять", "hɪt", "хит"],
   ["hope", "hoped", "hoped", "надеяться", "hoʊp", "хоуп"],
@@ -748,7 +778,7 @@ const VERBS = [
   ["kill", "killed", "killed", "убивать", "kɪl", "кил"],
   ["knock", "knocked", "knocked", "стучать", "nɒk", "нок"],
   ["last", "lasted", "lasted", "длиться", "læst", "лэст"],
-  ["laugh", "laughed", "laughed", "смеяться", "læf", "лэф"],
+  ["laugh", "laughed", "laughed", "смеяться", "læf", "лаф"],
   ["lay", "laid", "laid", "класть", "leɪ", "лэй"],
   ["lead", "led", "led", "вести", "liːd", "лид"],
   ["lend", "lent", "lent", "одалживать", "lend", "лэнд"],
@@ -756,20 +786,20 @@ const VERBS = [
   ["load", "loaded", "loaded", "загружать", "loʊd", "лоуд"],
   ["lose", "lost", "lost", "терять", "luːz", "луз"],
   ["marry", "married", "married", "жениться", "ˈmæri", "мэ́ри"],
-  ["mean", "meant", "meant", "означать", "miːn", "мин"],
-  ["miss", "missed", "missed", "скучать", "mɪs", "мис"],
-  ["move", "moved", "moved", "двигаться", "muːv", "мув"],
+  ["mean", "meant", "meant", "означать; иметь в виду", "miːn", "мин"],
+  ["miss", "missed", "missed", "скучать; пропускать; промахиваться", "mɪs", "мис"],
+  ["move", "moved", "moved", "двигаться; переезжать", "muːv", "мув"],
   ["nod", "nodded", "nodded", "кивать", "nɒd", "нод"],
   ["notice", "noticed", "noticed", "замечать", "ˈnoʊtɪs", "но́утис"],
   ["organise", "organised", "organised", "организовывать", "ˈɔːrɡənaɪz", "о́ргэнайз"],
   ["own", "owned", "owned", "владеть", "oʊn", "оун"],
   ["pack", "packed", "packed", "упаковывать", "pæk", "пэк"],
   ["panic", "panicked", "panicked", "паниковать", "ˈpænɪk", "пэ́ник"],
-  ["pass", "passed", "passed", "проходить", "pæs", "пэс"],
+  ["pass", "passed", "passed", "проходить; сдавать экзамен; передавать", "pæs", "пэс"],
   ["persuade", "persuaded", "persuaded", "убеждать", "pərˈsweɪd", "пэрсвэ́йд"],
   ["pick", "picked", "picked", "подбирать", "pɪk", "пик"],
   ["prefer", "preferred", "preferred", "предпочитать", "prɪˈfɜːr", "прифё́р"],
-  ["prepare", "prepared", "prepared", "готовить", "prɪˈpeər", "припэ́р"],
+  ["prepare", "prepared", "prepared", "готовить; готовиться", "prɪˈpeər", "припэ́р"],
   ["prevent", "prevented", "prevented", "предотвращать", "prɪˈvent", "привэ́нт"],
   ["protect", "protected", "protected", "защищать", "prəˈtekt", "протэ́кт"],
   ["prove", "proved", "proved", "доказывать", "pruːv", "прув"],
@@ -793,7 +823,7 @@ const VERBS = [
   ["require", "required", "required", "требовать", "rɪˈkwaɪər", "риква́йэр"],
   ["rescue", "rescued", "rescued", "спасать", "ˈreskjuː", "рэ́скью"],
   ["restart", "restarted", "restarted", "перезапускать", "ˌriːˈstɑːrt", "риста́рт"],
-  ["return", "returned", "returned", "возвращать", "rɪˈtɜːrn", "итёрн"],
+  ["return", "returned", "returned", "возвращаться; возвращать", "rɪˈtɜːrn", "ритё́рн"],
   ["rinse", "rinsed", "rinsed", "ополаскивать", "rɪns", "ринс"],
   ["rise", "rose", "risen", "подниматься", "raɪz", "райз"],
   ["sell", "sold", "sold", "продавать", "sel", "сэл"],
@@ -815,7 +845,7 @@ const VERBS = [
   ["steal", "stole", "stolen", "красть", "stiːl", "стил"],
   ["submit", "submitted", "submitted", "отправлять", "səbˈmɪt", "сабми́т"],
   ["succeed", "succeeded", "succeeded", "преуспевать", "səkˈsiːd", "сакси́д"],
-  ["suggest", "suggested", "suggested", "предлагать", "səɡˈdʒest", "сагджэ́ст"],
+  ["suggest", "suggested", "suggested", "предлагать", "səˈdʒest", "садже́ст"],
   ["sweep", "swept", "swept", "мести", "swiːp", "свип"],
   ["swim", "swam", "swum", "плавать", "swɪm", "свим"],
   ["swear", "swore", "sworn", "ругаться", "swer", "свэр"],
@@ -833,16 +863,15 @@ const VERBS = [
   ["welcome", "welcomed", "welcomed", "приветствовать", "ˈwelkəm", "уэ́лкэм"],
   ["wipe", "wiped", "wiped", "вытирать", "waɪp", "вайп"],
   ["win", "won", "won", "побеждать", "wɪn", "вин"],
-  ["wonder", "wondered", "wondered", "интересоваться", "ˈwʌndər", "уо́ндэр"],
+  ["wonder", "wondered", "wondered", "интересоваться", "ˈwʌndər", "уа́ндэр"],
   ["afford", "afforded", "afforded", "позволить себе (финансово)", "əˈfɔːrd", "эфо́рд"],
   ["apply for", "applied for", "applied for", "подавать заявление на", "əˈplaɪ fɔːr", "эпла́й фор"],
   ["boost", "boosted", "boosted", "усилить, продвинуть", "buːst", "буст"],
   ["disappear", "disappeared", "disappeared", "исчезнуть", "ˌdɪsəˈpɪər", "дисэпи́р"],
-  ["earn", "earned", "earned", "зарабатывать", "ɜːrn", "ёрн"],
+  ["earn", "earned", "earned", "зарабатывать", "ɝːn", "ёрн"],
   ["extend", "extended", "extended", "продлить", "ɪkˈstend", "икстэ́нд"],
   ["gain", "gained", "gained", "набирать, получать", "ɡeɪn", "гэйн"],
-  ["hack", "hacked", "hacked", "взломать", "hæk", "хэк"],
-  ["hire", "hired", "hired", "нанимать", "haɪər", "ха́йэр"],
+  ["hack", "hacked", "hacked", "взламывать", "hæk", "хэк"],
   ["ignore", "ignored", "ignored", "игнорировать", "ɪɡˈnɔːr", "игно́р"],
   ["inspire", "inspired", "inspired", "вдохновлять", "ɪnˈspaɪər", "инспа́йэр"],
   ["interact", "interacted", "interacted", "взаимодействовать", "ˌɪntərˈækt", "интэрэ́кт"],
@@ -854,9 +883,9 @@ const VERBS = [
   ["participate", "participated", "participated", "участвовать", "pɑːrˈtɪsɪpeɪt", "парти́сипэйт"],
   ["postpone", "postponed", "postponed", "откладывать", "poʊstˈpoʊn", "поустпо́ун"],
   ["pretend", "pretended", "pretended", "притворяться", "prɪˈtend", "притэ́нд"],
-  ["provide", "provided", "provided", "предоставлять", "prəˈvaɪd", "провайд"],
+  ["provide", "provided", "provided", "предоставлять", "prəˈvaɪd", "прова́йд"],
   ["react", "reacted", "reacted", "реагировать", "riˈækt", "риэ́кт"],
-  ["register", "registered", "registered", "зарегистрироваться", "ˈredʒɪstər", "рэ́джистэр"],
+  ["register", "registered", "registered", "регистрировать", "ˈredʒɪstər", "рэ́джистэр"],
   ["scroll", "scrolled", "scrolled", "листать (ленту)", "skroʊl", "скроул"],
   ["sign up", "signed up", "signed up", "зарегистрироваться", "saɪn ʌp", "сайн ап"],
   ["stalk", "stalked", "stalked", "следить за кем-то онлайн", "stɔːk", "сток"],
@@ -870,13 +899,13 @@ const VERBS = [
   ["get", "got", "got", "получить", "ɡet", "гэт"],
   ["find", "found", "found", "находить", "faɪnd", "файнд"],
   ["go", "went", "gone", "идти, уходить", "ɡoʊ", "гоу"],
-  ["buy", "bought", "bought", "купить", "baɪ", "бай"],
+  ["buy", "bought", "bought", "покупать", "baɪ", "бай"],
   ["make", "made", "made", "делать", "meɪk", "мэйк"],
   ["read", "read", "read", "читать", "riːd", "рид"],
   ["set", "set", "set", "устанавливать", "set", "сэт"],
   ["know", "knew", "known", "знать", "noʊ", "ноу"],
-  ["send", "sent", "sent", "послать", "send", "сэнд"],
-  ["take", "took", "taken", "взять, брать", "teɪk", "тэйк"],
+  ["send", "sent", "sent", "отправлять", "send", "сэнд"],
+  ["take", "took", "taken", "брать", "teɪk", "тэйк"],
   ["show", "showed", "shown", "показывать", "ʃoʊ", "шоу"],
   ["think", "thought", "thought", "думать", "θɪŋk", "синк"],
   ["learn", "learnt", "learnt", "учить", "lɜːrn", "лёрн"],
@@ -884,21 +913,21 @@ const VERBS = [
   ["say", "said", "said", "говорить, сказать", "seɪ", "сэй"],
   ["come", "came", "come", "прийти", "kʌm", "кам"],
   ["let", "let", "let", "пустить, дать", "let", "лэт"],
-  ["give", "gave", "given", "дать", "ɡɪv", "гив"],
+  ["give", "gave", "given", "давать", "ɡɪv", "гив"],
   ["pay", "paid", "paid", "платить", "peɪ", "пэй"],
-  ["light", "lit", "lit", "осветить", "laɪt", "лайт"],
+  ["light", "lit", "lit", "зажигать; освещать", "laɪt", "лайт"],
   ["write", "wrote", "written", "писать", "raɪt", "райт"],
-  ["become", "became", "become", "стать", "bɪˈkʌm", "бика́м"],
+  ["become", "became", "become", "становиться", "bɪˈkʌm", "бика́м"],
   ["keep", "kept", "kept", "хранить", "kiːp", "кип"],
   ["run", "ran", "run", "бежать", "rʌn", "ран"],
   ["put", "put", "put", "класть", "pʊt", "пут"],
   ["tell", "told", "told", "рассказывать", "tel", "тэл"],
-  ["drive", "drove", "driven", "гнать, ехать", "draɪv", "драйв"],
-  ["meet", "met", "met", "встретить", "miːt", "мит"],
+  ["drive", "drove", "driven", "водить; ехать на машине", "draɪv", "драйв"],
+  ["meet", "met", "met", "встречать; знакомиться", "miːt", "мит"],
   ["feel", "felt", "felt", "чувствовать", "fiːl", "фил"],
   ["speed", "sped", "sped", "ускорять", "spiːd", "спид"],
-  ["leave", "left", "left", "оставить", "liːv", "лив"],
-  ["bid", "bid", "bid", "велеть", "bɪd", "бид"],
+  ["leave", "left", "left", "уходить; оставлять", "liːv", "лив"],
+  ["bid", "bid", "bid", "делать ставку; предлагать цену", "bɪd", "бид"],
   ["spring", "sprang", "sprung", "вскочить", "sprɪŋ", "спринг"],
   ["hold", "held", "held", "держать", "hoʊld", "хоулд"],
   ["bring", "brought", "brought", "принести", "brɪŋ", "бринг"],
@@ -913,7 +942,7 @@ const VERBS = [
   ["begin", "began", "begun", "начать", "bɪˈɡɪn", "биги́н"],
   ["dream", "dreamt", "dreamt", "мечтать", "driːm", "дрим"],
   ["cast", "cast", "cast", "кинуть", "kæst", "кэст"],
-  ["bear", "bore", "born", "родить", "beər", "бэр"],
+  ["bear", "bore", "borne", "выносить (нагрузку); терпеть (эмоционально); родить", "beər", "бэр"],
   ["speak", "spoke", "spoken", "говорить", "spiːk", "спик"],
   ["wear", "wore", "worn", "носить одежду", "weər", "уэр"],
   ["forecast", "forecast", "forecast", "предсказывать", "ˈfɔːrkæst", "фо́ркэст"],
@@ -926,40 +955,40 @@ const VERBS = [
   ["seek", "sought", "sought", "искать", "siːk", "сик"],
   ["wet", "wet", "wet", "мочить", "wet", "уэт"],
   ["draw", "drew", "drawn", "рисовать", "drɔː", "дро"],
-  ["stick", "stuck", "stuck", "приклеить", "stɪk", "стик"],
-  ["split", "split", "split", "расщепить", "splɪt", "сплит"],
+  ["stick", "stuck", "stuck", "приклеивать", "stɪk", "стик"],
+  ["split", "split", "split", "делить; расщеплять", "splɪt", "сплит"],
   ["sit", "sat", "sat", "сидеть", "sɪt", "сит"],
   ["teach", "taught", "taught", "учить", "tiːtʃ", "тич"],
   ["broadcast", "broadcast", "broadcast", "вещать", "ˈbrɔːdkæst", "бро́дкэст"],
-  ["strike", "struck", "struck", "ударить", "straɪk", "страйк"],
+  ["strike", "struck", "struck", "ударять; бастовать", "straɪk", "страйк"],
   ["shoe", "shod", "shod", "обувать", "ʃuː", "шу"],
   ["bet", "bet", "bet", "держать пари", "bet", "бэт"],
   ["wake", "woke", "woken", "просыпаться", "weɪk", "уэйк"],
-  ["burn", "burnt", "burnt", "гореть", "bɜːrn", "бёрн"],
+  ["burn", "burnt", "burnt", "гореть; жечь", "bɝːn", "бёрн"],
   ["swing", "swung", "swung", "качаться", "swɪŋ", "свинг"],
 ];
 const ADJS = [
   ["advanced", "продвинутый", "ədˈvænst", "эдвэ́нст"],
   ["amazed", "поражённый", "əˈmeɪzd", "эмэ́йзд"],
   ["amazing", "удивительный", "əˈmeɪzɪŋ", "эмэ́йзинг"],
-  ["anxious", "тревожный", "ˈæŋkʃəs", "э́нкшэс"],
-  ["appropriate", "подходящий", "əˈproʊpriɪt", "эпро́уприит"],
+  ["anxious", "тревожный, обеспокоенный", "ˈæŋkʃəs", "э́нгкшэс"],
+  ["appropriate", "подходящий", "əˈproʊpriət", "эпро́уприэт"],
   ["ashamed", "пристыженный", "əˈʃeɪmd", "эше́ймд"],
-  ["astonished", "изумлённый", "əˈstɒnɪʃt", "эсто́ништ"],
+  ["astonished", "изумлённый", "əˈstɑːnɪʃt", "эста́ништ"],
   ["attractive", "привлекательный", "əˈtræktɪv", "этрэ́ктив"],
   ["awful", "ужасный", "ˈɔːfəl", "о́фэл"],
   ["awkward", "неловкий", "ˈɔːkwərd", "о́квэрд"],
   ["brave", "смелый", "breɪv", "брэйв"],
-  ["careful", "осторожный", "ˈkeərfəl", "кэ́рфэл"],
+  ["careful", "осторожный", "ˈkerfəl", "кэ́рфэл"],
   ["challenging", "сложный", "ˈtʃælɪndʒɪŋ", "чэ́линджинг"],
   ["cheerful", "жизнерадостный", "ˈtʃɪərfəl", "чи́рфэл"],
   ["childish", "детский", "ˈtʃaɪldɪʃ", "ча́йлдиш"],
   ["cloudy", "облачный", "ˈklaʊdi", "кла́уди"],
-  ["comfortable", "комфортный", "ˈkʌmfərtəbəl", "ка́мфортэбэл"],
-  ["confident", "уверенный", "ˈkɒnfɪdənt", "ко́нфидэнт"],
+  ["comfortable", "комфортный", "ˈkʌmftəbəl", "ка́мфтэбл"],
+  ["confident", "уверенный", "ˈkɑːnfɪdənt", "ко́нфидэнт"],
   ["confused", "запутавшийся", "kənˈfjuːzd", "конфью́зд"],
   ["confusing", "запутанный", "kənˈfjuːzɪŋ", "конфью́зинг"],
-  ["convenient", "удобный", "kənˈviːniənt", "конви́ниэнт"],
+  ["convenient", "удобный", "kənˈviːniənt", "кэнви́ниэнт"],
   ["crowded", "многолюдный", "ˈkraʊdɪd", "кра́удид"],
   ["curious", "любопытный", "ˈkjʊəriəs", "кью́риэс"],
   ["dangerous", "опасный", "ˈdeɪndʒərəs", "дэ́йнджэрэс"],
@@ -973,7 +1002,7 @@ const ADJS = [
   ["excited", "взволнованный", "ɪkˈsaɪtɪd", "икса́йтид"],
   ["exciting", "захватывающий", "ɪkˈsaɪtɪŋ", "икса́йтинг"],
   ["famous", "известный", "ˈfeɪməs", "фэ́ймэс"],
-  ["fortunate", "удачливый", "ˈfɔːrtʃənɪt", "фо́рчэнит"],
+  ["fortunate", "удачливый", "ˈfɔːrtʃənət", "фо́рчунэт"],
   ["frightened", "испуганный", "ˈfraɪtənd", "фра́йтэнд"],
   ["frightening", "пугающий", "ˈfraɪtənɪŋ", "фра́йтэнинг"],
   ["generous", "щедрый", "ˈdʒenərəs", "джэ́нэрэс"],
@@ -981,35 +1010,35 @@ const ADJS = [
   ["grateful", "благодарный", "ˈɡreɪtfəl", "грэ́йтфэл"],
   ["greyish", "сероватый", "ˈɡreɪɪʃ", "грэ́йиш"],
   ["helpful", "полезный", "ˈhelpfəl", "хэ́лпфэл"],
-  ["honest", "честный", "ˈɒnɪst", "о́нист"],
+  ["honest", "честный", "ˈɑːnɪst", "а́нэст"],
   ["impressed", "впечатлённый", "ɪmˈprest", "импрэ́ст"],
   ["impressive", "впечатляющий", "ɪmˈpresɪv", "импрэ́сив"],
   ["independent", "независимый", "ˌɪndɪˈpendənt", "индипэ́ндэнт"],
-  ["interested", "заинтересованный", "ˈɪntrɪstɪd", "и́нтрэстид"],
+  ["interested", "заинтересованный", "ˈɪntrɪstɪd", "и́нтристид"],
   ["jealous", "ревнивый", "ˈdʒeləs", "джэ́лэс"],
   ["lonely", "одинокий", "ˈloʊnli", "ло́унли"],
   ["narrow", "узкий", "ˈnæroʊ", "нэ́роу"],
   ["nervous", "нервный", "ˈnɜːrvəs", "нёрвэс"],
-  ["ordinary", "обычный", "ˈɔːrdɪneri", "о́рдинэри"],
+  ["ordinary", "обычный, заурядный", "ˈɔːrdəneri", "о́рдэнери"],
   ["patient", "терпеливый", "ˈpeɪʃənt", "пэ́йшэнт"],
   ["peaceful", "спокойный", "ˈpiːsfəl", "пи́сфэл"],
-  ["pleased", "довольный", "pliːzd", "плизд"],
-  ["polite", "вежливый", "pəˈlaɪt", "пола́йт"],
+  ["pleased", "довольный", "pliːzd", "плиизд"],
+  ["polite", "вежливый", "pəˈlaɪt", "пэла́йт"],
   ["precious", "ценный", "ˈpreʃəs", "прэ́шэс"],
   ["proud", "гордый", "praʊd", "прауд"],
   ["relaxed", "расслабленный", "rɪˈlækst", "рилэ́кст"],
   ["relaxing", "расслабляющий", "rɪˈlæksɪŋ", "рилэ́ксинг"],
-  ["reliable", "надёжный", "rɪˈlaɪəbəl", "рила́йэбэл"],
+  ["reliable", "надёжный", "rɪˈlaɪəbəl", "рила́йэбл"],
   ["relieved", "испытавший облегчение", "rɪˈliːvd", "рили́вд"],
-  ["responsible", "ответственный", "rɪˈspɒnsɪbəl", "риспо́нсибэл"],
+  ["responsible", "ответственный", "rɪˈspɑːnsəbəl", "риспа́нсэбл"],
   ["satisfied", "удовлетворённый", "ˈsætɪsfaɪd", "сэ́тисфайд"],
   ["sensitive", "чувствительный", "ˈsensɪtɪv", "сэ́нситив"],
   ["serious", "серьёзный", "ˈsɪəriəs", "си́риэс"],
   ["shiny", "блестящий", "ˈʃaɪni", "ша́йни"],
-  ["shocked", "шокированный", "ʃɒkt", "шокт"],
-  ["shocking", "шокирующий", "ˈʃɒkɪŋ", "шо́кинг"],
+  ["shocked", "шокированный", "ʃɑːkt", "шакт"],
+  ["shocking", "шокирующий", "ˈʃɑːkɪŋ", "ша́кинг"],
   ["shy", "застенчивый", "ʃaɪ", "шай"],
-  ["similar", "похожий", "ˈsɪmɪlər", "си́милэр"],
+  ["similar", "похожий", "ˈsɪmələr", "си́мэлэр"],
   ["slippery", "скользкий", "ˈslɪpəri", "сли́пэри"],
   ["stressful", "стрессовый", "ˈstresfəl", "стрэ́сфэл"],
   ["successful", "успешный", "səkˈsesfəl", "саксэ́сфэл"],
@@ -1017,32 +1046,32 @@ const ADJS = [
   ["surprising", "удивительный", "sərˈpraɪzɪŋ", "сэрпра́йзинг"],
   ["terrified", "напуганный", "ˈterɪfaɪd", "тэ́рифайд"],
   ["thoughtful", "вдумчивый", "ˈθɔːtfəl", "со́тфэл"],
-  ["uncomfortable", "некомфортный", "ʌnˈkʌmfərtəbəl", "анка́мфортэбэл"],
+  ["uncomfortable", "некомфортный", "ʌnˈkʌmftəbəl", "анка́мфтэбл"],
   ["unusual", "необычный", "ʌnˈjuːʒuəl", "анью́жуэл"],
   ["useful", "полезный", "ˈjuːsfəl", "ю́сфэл"],
-  ["weird", "странный", "wɪərd", "виэрд"],
+  ["weird", "странный", "wɪrd", "уи́рд"],
   ["worried", "обеспокоенный", "ˈwɜːrid", "уёрид"],
   ["worrying", "вызывающий беспокойство", "ˈwɜːriɪŋ", "уёриинг"],
   ["addicted", "зависимый", "əˈdɪktɪd", "эди́ктид"],
-  ["bitter", "горький", "ˈbɪtər", "би́тэр"],
+  ["bitter", "горький; обиженный", "ˈbɪtər", "би́тэр"],
   ["cashless", "безналичный", "ˈkæʃlɪs", "кэ́шлис"],
   ["digital", "цифровой", "ˈdɪdʒɪtəl", "ди́джитэл"],
   ["empathetic", "эмпатичный", "ˌempəˈθetɪk", "эмпэсэ́тик"],
-  ["inconvenient", "неудобный", "ˌɪnkənˈviːniənt", "инконви́ниэнт"],
+  ["inconvenient", "неудобный", "ˌɪnkənˈviːniənt", "инкэнви́ниэнт"],
   ["infected", "заражённый", "ɪnˈfektɪd", "инфэ́ктид"],
-  ["laid-back", "расслабленный, непринуждённый", "ˌleɪdˈbæk", "лэйдбэ́к"],
-  ["legal", "юридический, законный", "ˈliːɡəl", "ли́гэл"],
+  ["laid-back", "расслабленный, непринуждённый", "ˌleɪdˈbæk", "лэйд бэ́к"],
+  ["legal", "законный, юридический", "ˈliːɡəl", "ли́гэл"],
   ["outdated", "устаревший", "ˌaʊtˈdeɪtɪd", "аутдэ́йтид"],
   ["pregnant", "беременная", "ˈpreɡnənt", "прэ́гнэнт"],
-  ["profitable", "прибыльный", "ˈprɒfɪtəbəl", "про́фитэбэл"],
-  ["reckless", "безрассудный", "ˈreklɪs", "рэ́клис"],
+  ["profitable", "прибыльный, выгодный", "ˈprɑːfɪtəbəl", "пра́фитэбл"],
+  ["reckless", "безрассудный, неосторожный", "ˈreklɪs", "рэ́клис"],
   ["risky", "рискованный", "ˈrɪski", "ри́ски"],
-  ["stray", "бродячий", "streɪ", "стрэй"],
+  ["stray", "бродячий, бездомный", "streɪ", "стрэй"],
   ["touching", "трогательный", "ˈtʌtʃɪŋ", "та́чинг"],
   ["trending", "в тренде, популярный", "ˈtrendɪŋ", "трэ́ндинг"],
-  ["unacceptable", "неприемлемый", "ˌʌnəkˈseptəbəl", "анэксэ́птэбэл"],
-  ["urgent", "срочный", "ˈɜːrdʒənt", "ёрджэнт"],
-  ["volatile", "нестабильный, волатильный", "ˈvɒlətaɪl", "во́лэтайл"],
+  ["unacceptable", "неприемлемый", "ˌʌnəkˈseptəbəl", "анэксэ́птэбл"],
+  ["urgent", "срочный, неотложный", "ˈɜːrdʒənt", "ёрджэнт"],
+  ["volatile", "нестабильный, изменчивый; волатильный", "ˈvɒlətaɪl", "во́лэтайл"],
   ["overheated", "перегретый", "ˌoʊvərˈhiːtɪd", "о́увэрхи́тид"],
 ];
 const NOUNS = [
@@ -1062,21 +1091,21 @@ const NOUNS = [
   ["allergy", "аллергия", "ˈælərɡi", "э́лэрджи"],
   ["allergy medicine", "лекарство от аллергии", "ˈælərɡi ˈmedɪsɪn", "э́лэрджи мэ́дисин"],
   ["antibiotic", "антибиотик", "ˌæntɪbaɪˈɒtɪk", "энтибайо́тик"],
-  ["anxiety", "тревожность", "æŋˈzaɪɪti", "энгза́йити"],
+  ["anxiety", "тревожность", "æŋˈzaɪəti", "ангза́йэти"],
   ["apartment complex", "жилой комплекс", "əˈpɑːrtmənt ˈkɒmpleks", "эпа́ртмэнт ко́мплекс"],
   ["appliance", "бытовой прибор", "əˈplaɪəns", "эпла́йэнс"],
   ["applicant", "кандидат", "ˈæplɪkənt", "э́пликэнт"],
   ["application", "приложение", "ˌæplɪˈkeɪʃən", "эпликэ́йшэн"],
   ["appointment", "запись, приём", "əˈpɔɪntmənt", "эпо́йнтмэнт"],
-  ["artist", "художник", "ˈɑːrtɪst", "а́ртист"],
+  ["artist", "художник; артист", "ˈɑːrtɪst", "а́ртист"],
   ["attention", "внимание", "əˈtenʃən", "этэ́ншэн"],
   ["avalanche", "лавина", "ˈævəlæntʃ", "э́вэлэнч"],
   ["balcony", "балкон", "ˈbælkəni", "бэ́лкэни"],
   ["bandage", "бинт, повязка", "ˈbændɪdʒ", "бэ́ндидж"],
-  ["behavior", "поведение", "bɪˈheɪvjər", "бихэ́йвйэр"],
+  ["behavior", "поведение", "bɪˈheɪvjər", "бихэ́йвьер"],
   ["bleach", "отбеливатель", "bliːtʃ", "блич"],
   ["block of flats", "многоквартирный дом", "blɒk əv flæts", "блок эв флэтс"],
-  ["blocked nose", "заложенный нос", "blɒkt noʊz", "блокт ноуз"],
+  ["blocked nose", "заложенный нос", "blɒkt nəʊz", "блокт ноуз"],
   ["blood pressure", "кровяное давление", "blʌd ˈpreʃər", "блад прэ́шэр"],
   ["broom", "веник", "bruːm", "брум"],
   ["brush", "щётка", "brʌʃ", "браш"],
@@ -1087,22 +1116,22 @@ const NOUNS = [
   ["cabinet", "шкафчик", "ˈkæbɪnɪt", "кэ́бинит"],
   ["carrier", "перевозчик", "ˈkæriər", "кэ́риэр"],
   ["central heating", "центральное отопление", "ˈsentrəl ˈhiːtɪŋ", "сэ́нтрэл хи́тинг"],
-  ["certificate", "справка, сертификат", "sərˈtɪfɪkɪt", "сэрти́фикит"],
-  ["change", "изменение", "tʃeɪndʒ", "чейндж"],
+  ["certificate", "справка, сертификат", "sərˈtɪfɪkət", "сэрти́фикэт"],
+  ["change", "изменение; сдача", "tʃeɪndʒ", "чейндж"],
   ["charger", "зарядное устройство", "ˈtʃɑːrdʒər", "ча́рджэр"],
   ["client", "клиент", "ˈklaɪənt", "кла́йэнт"],
-  ["cloth", "тряпка", "klɒθ", "клос"],
-  ["clue", "улика, подсказка", "kluː", "клу"],
-  ["coach", "междугородний автобус", "koʊtʃ", "коутч"],
+  ["cloth", "ткань, тряпка", "klɒθ", "клоф"],
+  ["clue", "подсказка, зацепка", "kluː", "клу"],
+  ["coach", "тренер; междугородний автобус", "koʊtʃ", "коутч"],
   ["colleague", "коллега", "ˈkɒliːɡ", "ко́лиг"],
   ["collector", "коллекционер", "kəˈlektər", "колэ́ктэр"],
-  ["competition", "соревнование, конкурс", "ˌkɒmpɪˈtɪʃən", "компити́шэн"],
+  ["competition", "соревнование, конкурс", "ˌkɒmpɪˈtɪʃən", "компэти́шэн"],
   ["concept", "концепция", "ˈkɒnsept", "ко́нсэпт"],
   ["confidence", "уверенность", "ˈkɒnfɪdəns", "ко́нфидэнс"],
   ["conflict", "конфликт", "ˈkɒnflɪkt", "ко́нфликт"],
   ["construction site", "стройка", "kənˈstrʌkʃən saɪt", "констра́кшэн сайт"],
   ["contest", "конкурс", "ˈkɒntest", "ко́нтэст"],
-  ["contract", "договор", "ˈkɒntrækt", "ко́нтрэкт"],
+  ["contract", "контракт, договор", "ˈkɒntrækt", "ко́нтрэкт"],
   ["cost", "стоимость", "kɒst", "кост"],
   ["cough", "кашель", "kɒf", "коф"],
   ["cough syrup", "сироп от кашля", "kɒf ˈsɪrəp", "коф си́рэп"],
@@ -1110,7 +1139,7 @@ const NOUNS = [
   ["crowd", "толпа", "kraʊd", "крауд"],
   ["cuisine", "кухня, национальная кухня", "kwɪˈziːn", "квизи́н"],
   ["cupboard", "шкаф для посуды", "ˈkʌbərd", "ка́бэрд"],
-  ["curiosity", "любопытство", "ˌkjʊəriˈɒsɪti", "кьюриосити"],
+  ["curiosity", "любопытство", "ˌkjʊəriˈɒsɪti", "кьюрио́сити"],
   ["customer", "клиент, покупатель", "ˈkʌstəmər", "ка́стэмэр"],
   ["customs", "таможня", "ˈkʌstəmz", "ка́стэмз"],
   ["decision", "решение, выбор", "dɪˈsɪʒən", "диси́жэн"],
@@ -1120,10 +1149,10 @@ const NOUNS = [
   ["destination", "место назначения", "ˌdestɪˈneɪʃən", "дэстинэ́йшэн"],
   ["detergent", "моющее средство", "dɪˈtɜːrdʒənt", "дитёрджэнт"],
   ["developer", "разработчик", "dɪˈveləpər", "дивэ́лэпэр"],
-  ["dishwasher", "посудомоечная машина", "ˈdɪʃwɒʃər", "ди́шуошэр"],
+  ["dishwasher", "посудомоечная машина", "ˈdɪʃwɒʃər", "ди́швошэр"],
   ["dizziness", "головокружение", "ˈdɪzɪnɪs", "ди́зинис"],
   ["dustpan", "совок", "ˈdʌstpæn", "да́стпэн"],
-  ["earthquake", "землетрясение", "ˈɜːrθkweɪk", "ёрскуэйк"],
+  ["earthquake", "землетрясение", "ˈɜːrθkweɪk", "ёрфкуэйк"],
   ["embankment", "набережная", "ɪmˈbæŋkmənt", "имбэ́нкмэнт"],
   ["emergency", "экстренная ситуация", "ɪˈmɜːrdʒənsi", "имёрджэнси"],
   ["employer", "работодатель", "ɪmˈplɔɪər", "импло́йэр"],
@@ -1134,11 +1163,11 @@ const NOUNS = [
   ["excitement", "воодушевление", "ɪkˈsaɪtmənt", "икса́йтмэнт"],
   ["exhibition", "выставка", "ˌeksɪˈbɪʃən", "эксиби́шэн"],
   ["exit", "съезд, выход", "ˈeksɪt", "э́ксит"],
-  ["experience", "опыт", "ɪkˈspɪəriəns", "иксп́ириэнс"],
+  ["experience", "опыт", "ɪkˈspɪəriəns", "икспи́риэнс"],
   ["fabric softener", "кондиционер для белья", "ˈfæbrɪk ˈsɒfənər", "фэ́брик со́фэнэр"],
   ["facade", "фасад", "fəˈsɑːd", "фэса́д"],
   ["facade net", "фасадная сетка", "fəˈsɑːd net", "фэса́д нэт"],
-  ["fair", "ярмарка", "fer", "фэр"],
+  ["fair", "ярмарка", "feər", "фэр"],
   ["fairy", "фея", "ˈfeəri", "фэ́ри"],
   ["fairy tale", "сказка", "ˈfeəri teɪl", "фэ́ри тэйл"],
   ["fear", "страх", "fɪər", "фиэр"],
@@ -1161,8 +1190,8 @@ const NOUNS = [
   ["hangover", "похмелье", "ˈhæŋoʊvər", "хэ́нговэр"],
   ["happiness", "счастье", "ˈhæpɪnɪs", "хэ́пинис"],
   ["headache", "головная боль", "ˈhedeɪk", "хэ́дэйк"],
-  ["headphones", "наушники", "ˈhedfоʊnz", "хэ́дфоунз"],
-  ["health insurance", "медицинская страховка", "helθ ɪnˈʃʊərəns", "хэлс иншу́рэнс"],
+  ["headphones", "наушники", "ˈhedfoʊnz", "хэ́дфоунз"],
+  ["health insurance", "медицинская страховка", "helθ ɪnˈʃʊərəns", "хэлф иншу́рэнс"],
   ["hill", "холм", "hɪl", "хил"],
   ["idea", "идея", "aɪˈdɪə", "айди́э"],
   ["illness", "болезнь", "ˈɪlnɪs", "и́лнис"],
@@ -1179,7 +1208,7 @@ const NOUNS = [
   ["lawyer", "юрист", "ˈlɔɪər", "ло́йэр"],
   ["layover", "пересадка", "ˈleɪoʊvər", "лэ́йоувэр"],
   ["leaf", "лист", "liːf", "лиф"],
-  ["leftovers", "остатки еды", "ˈleftоʊvərz", "лэ́фтоувэрз"],
+  ["leftovers", "остатки еды", "ˈleftoʊvərz", "лэ́фтоувэрз"],
   ["legend", "легенда", "ˈledʒənd", "лэ́джэнд"],
   ["lesson", "урок", "ˈlesən", "лэ́сэн"],
   ["lifestyle", "образ жизни", "ˈlaɪfstaɪl", "ла́йфстайл"],
@@ -1214,7 +1243,7 @@ const NOUNS = [
   ["participant", "участник", "pɑːrˈtɪsɪpənt", "парти́сипэнт"],
   ["participation", "участие", "pɑːrˌtɪsɪˈpeɪʃən", "партисипэ́йшэн"],
   ["patch", "патч, наклейка/патч", "pætʃ", "пэтч"],
-  ["path", "тропа", "pæθ", "пэс"],
+  ["path", "тропа", "pæθ", "паф"],
   ["patience", "терпение", "ˈpeɪʃəns", "пэ́йшэнс"],
   ["payment", "оплата", "ˈpeɪmənt", "пэ́ймэнт"],
   ["physical activity", "физическая активность", "ˈfɪzɪkəl ækˈtɪvɪti", "фи́зикэл экти́вити"],
@@ -1232,7 +1261,7 @@ const NOUNS = [
   ["promise", "обещание", "ˈprɒmɪs", "про́мис"],
   ["psychiatrist", "психиатр", "saɪˈkaɪətrɪst", "сайка́йэтрист"],
   ["psychologist", "психолог", "saɪˈkɒlədʒɪst", "сайко́лэджист"],
-  ["psychotherapist", "психотерапевт", "ˌsaɪkoʊˈθerəpɪst", "сайкосэ́рэпист"],
+  ["psychotherapist", "психотерапевт", "ˌsaɪkoʊˈθerəpɪst", "сайкоусе́рэпист"],
   ["pump", "насос", "pʌmp", "памп"],
   ["rag", "тряпка", "ræɡ", "рэг"],
   ["realization", "осознание", "ˌriːəlɪˈzeɪʃən", "риэлизэ́йшэн"],
@@ -1269,7 +1298,7 @@ const NOUNS = [
   ["soap", "мыло", "soʊp", "соуп"],
   ["software", "программное обеспечение", "ˈsɒftweər", "со́фтуэр"],
   ["solution", "решение", "səˈluːʃən", "солю́шэн"],
-  ["sore throat", "больное горло", "sɔːr θroʊt", "сор сроут"],
+  ["sore throat", "больное горло", "sɔːr θroʊt", "сор троут"],
   ["sponge", "губка", "spʌndʒ", "спандж"],
   ["stage", "сцена", "steɪdʒ", "стэйдж"],
   ["startup", "стартап", "ˈstɑːrtʌp", "ста́ртап"],
@@ -1295,7 +1324,7 @@ const NOUNS = [
   ["trash", "мусор", "træʃ", "трэш"],
   ["treatment", "лечение", "ˈtriːtmənt", "три́тмэнт"],
   ["treehouse", "домик на дереве", "ˈtriːhaʊs", "три́хаус"],
-  ["truth", "правда", "truːθ", "трус"],
+  ["truth", "правда", "truːθ", "труф"],
   ["vaccination", "вакцинация", "ˌvæksɪˈneɪʃən", "вэксинэ́йшэн"],
   ["vacuum cleaner", "пылесос", "ˈvækjuːm ˈkliːnər", "вэ́кьюм кли́нэр"],
   ["value", "ценность", "ˈvæljuː", "вэ́лью"],
@@ -1305,12 +1334,12 @@ const NOUNS = [
   ["villain", "злодей", "ˈvɪlən", "ви́лэн"],
   ["volunteer work", "волонтёрская работа", "ˌvɒlənˈtɪər wɜːrk", "волэнти́р уёрк"],
   ["wand", "палочка", "wɒnd", "уонд"],
-  ["warmth", "теплота", "wɔːrmθ", "уормс"],
+  ["warmth", "теплота", "wɔːrmθ", "уормф"],
   ["warranty", "гарантия", "ˈwɒrənti", "уо́рэнти"],
   ["washing machine", "стиральная машина", "ˈwɒʃɪŋ məˈʃiːn", "уо́шинг мэши́н"],
   ["washing powder", "стиральный порошок", "ˈwɒʃɪŋ ˈpaʊdər", "уо́шинг па́удэр"],
   ["wind", "ветер", "wɪnd", "уинд"],
-  ["wound", "рана", "wuːnd", "вунд"],
+  ["wound", "рана", "wuːnd", "вуунд"],
   ["writer", "писатель", "ˈraɪtər", "ра́йтэр"],
   ["advantage", "преимущество", "ədˈvɑːntɪdʒ", "эдва́нтидж"],
   ["blanket", "плед, одеяло", "ˈblæŋkɪt", "блэ́нкит"],
@@ -1328,7 +1357,7 @@ const NOUNS = [
   ["harm", "вред", "hɑːrm", "харм"],
   ["hood", "капот", "hʊd", "худ"],
   ["income", "доход", "ˈɪnkʌm", "и́нкам"],
-  ["infrastructure", "инфраструктура", "ˈɪnfrəˌstrʌktʃər", "и́нфрэстрактчэр"],
+  ["infrastructure", "инфраструктура", "ˈɪnfrəˌstrʌktʃər", "и́нфрэстракчэр"],
   ["injection", "укол, инъекция", "ɪnˈdʒekʃən", "инджэ́кшэн"],
   ["inspiration", "вдохновение", "ˌɪnspɪˈreɪʃən", "инспирэ́йшэн"],
   ["jack", "домкрат", "dʒæk", "джэк"],
@@ -1339,8 +1368,8 @@ const NOUNS = [
   ["pause", "пауза", "pɔːz", "поз"],
   ["pickup point", "пункт выдачи", "ˈpɪkʌp pɔɪnt", "пи́кап пойнт"],
   ["posture", "осанка", "ˈpɒstʃər", "по́счэр"],
-  ["procedure", "процедура", "prəˈsiːdʒər", "просидэр"],
-  ["reach", "охват (аудитории)", "riːtʃ", "рич"],
+  ["procedure", "процедура", "prəˈsiːdʒər", "проси́джэр"],
+  ["reach", "охват (аудитории)", "riːtʃ", "риич"],
   ["refund", "возврат денег", "ˈriːfʌnd", "ри́фанд"],
   ["replacement", "замена", "rɪˈpleɪsmənt", "риплэ́йсмэнт"],
   ["requirement", "требование", "rɪˈkwaɪərmənt", "риква́йэрмэнт"],
@@ -1349,9 +1378,14 @@ const NOUNS = [
   ["scam", "мошенничество", "skæm", "скэм"],
   ["seizure", "приступ", "ˈsiːʒər", "си́жэр"],
   ["supplier", "поставщик", "səˈplaɪər", "сэпла́йэр"],
-  ["thread", "цепочка сообщений", "θred", "срэд"],
-  ["tire shop", "шиномонтаж", "ˈtaɪər ʃɒp", "та́йэр шоп"],
+  ["thread", "цепочка сообщений", "θred", "трэд"],
+  ["tire shop", "шиномонтаж", "ˈtaɪər ʃɑːp", "та́йэр шоп"],
   ["typo", "опечатка", "ˈtaɪpoʊ", "та́йпоу"],
+  ["appreciation", "благодарность", "əˌpriːʃiˈeɪʃən", "эпришиэ́йшэн"],
+  ["attempt", "попытка", "əˈtempt", "этэ́мпт"],
+  ["effort", "усилие, старание", "ˈefərt", "э́фэрт"],
+  ["passion", "увлечение, страсть", "ˈpæʃən", "пэ́шэн"],
+  ["personal boundaries", "личные границы", "ˈpɜːrsənəl ˈbaʊndəriz", "пёрсэнэл ба́ундэриз"],
 ];
 const PHRASAL = [
   ["ask out", "пригласить на свидание", "æsk aʊt", "эск аут"],
@@ -1362,46 +1396,46 @@ const PHRASAL = [
   ["calm down", "успокоиться", "kɑːm daʊn", "кам даун"],
   ["carry on", "продолжать", "ˈkæri ɒn", "кэ́ри он"],
   ["cheer up", "взбодриться, подбодрить", "tʃɪər ʌp", "чир ап"],
-  ["clean up", "убрать", "kliːn ʌp", "клин ап"],
+  ["clean up", "убрать", "kliːn ʌp", "клиин ап"],
   ["come across", "наткнуться на", "kʌm əˈkrɒs", "кам экро́с"],
   ["come back", "вернуться", "kʌm bæk", "кам бэк"],
-  ["come up with", "придумать", "kʌm ʌp wɪð", "кам ап уиз"],
+  ["come up with", "придумать; предложить идею", "kʌm ʌp wɪð", "кам ап уиз"],
   ["cut down on", "сократить", "kʌt daʊn ɒn", "кат даун он"],
   ["drop by", "зайти ненадолго", "drɒp baɪ", "дроп бай"],
-  ["figure out", "выяснить, разобраться", "ˈfɪɡər aʊt", "фи́гэр аут"],
-  ["fill in", "заполнить", "fɪl ɪn", "фил ин"],
+  ["figure out", "разобраться; выяснить; понять", "ˈfɪɡər aʊt", "фи́гэр аут"],
+  ["fill in", "заполнить; подменить кого-то", "fɪl ɪn", "фил ин"],
   ["find out", "узнать", "faɪnd aʊt", "файнд аут"],
-  ["get along with", "ладить с", "ɡet əˈlɒŋ wɪð", "гэт элонг уиз"],
+  ["get along with", "ладить с", "ɡet əˈlɒŋ wɪð / ɡet əˈlɔːŋ wɪð", "гэт элонг уиз"],
   ["get back", "вернуться", "ɡet bæk", "гэт бэк"],
-  ["get over", "оправиться от", "ɡet ˈoʊvər", "гэт о́увэр"],
+  ["get over", "оправиться от; преодолеть", "ɡet ˈoʊvər", "гэт о́увэр"],
   ["give away", "раздавать", "ɡɪv əˈweɪ", "гив эуэ́й"],
   ["give back", "вернуть", "ɡɪv bæk", "гив бэк"],
   ["give up", "сдаваться, бросать", "ɡɪv ʌp", "гив ап"],
-  ["go on", "продолжаться", "ɡoʊ ɒn", "гоу он"],
+  ["go on", "продолжать; происходить", "ɡoʊ ɒn", "гоу он"],
   ["grow up", "вырасти", "ɡroʊ ʌp", "гроу ап"],
   ["hang out", "проводить время", "hæŋ aʊt", "хэнг аут"],
   ["hold on", "подождать", "hoʊld ɒn", "хоулд он"],
   ["keep on", "продолжать", "kiːp ɒn", "кип он"],
-  ["keep up with", "успевать за", "kiːp ʌp wɪð", "кип ап уиз"],
+  ["keep up with", "успевать за; быть в курсе", "kiːp ʌp wɪð", "кип ап уиз"],
   ["keep in touch", "оставаться на связи", "kiːp ɪn tʌtʃ", "кип ин тач"],
   ["look after", "присматривать", "lʊk ˈɑːftər", "лук а́фтэр"],
   ["look for", "искать", "lʊk fɔːr", "лук фор"],
   ["look forward to", "ждать с нетерпением", "lʊk ˈfɔːrwərd tuː", "лук фо́руэрд ту"],
   ["look up", "искать информацию", "lʊk ʌp", "лук ап"],
-  ["pick up", "подобрать; заехать за", "pɪk ʌp", "пик ап"],
-  ["put away", "убрать на место", "pʊt əˈweɪ", "пут эуэ́й"],
+  ["pick up", "подобрать; забрать; заехать за", "pɪk ʌp", "пик ап"],
+  ["put away", "убирать на место", "pʊt əˈweɪ", "пут эуэ́й"],
   ["put off", "откладывать", "pʊt ɒf", "пут оф"],
-  ["run into", "случайно встретить", "rʌn ˈɪntuː", "ран и́нту"],
+  ["run into", "случайно встретить; столкнуться с проблемой", "rʌn ˈɪntuː", "ран и́нту"],
   ["set up", "организовать, настроить", "set ʌp", "сэт ап"],
   ["show up", "появиться", "ʃoʊ ʌp", "шоу ап"],
-  ["sort out", "разобраться", "sɔːrt aʊt", "сорт аут"],
+  ["sort out", "разобраться; уладить; рассортировать", "sɔːrt aʊt", "сорт аут"],
   ["take after", "быть похожим на", "teɪk ˈɑːftər", "тэйк а́фтэр"],
   ["take off", "взлететь; снять", "teɪk ɒf", "тэйк оф"],
   ["take out", "вывести, вынести", "teɪk aʊt", "тэйк аут"],
   ["take up", "начать заниматься", "teɪk ʌp", "тэйк ап"],
   ["throw away", "выбросить", "θroʊ əˈweɪ", "сроу эуэ́й"],
   ["try on", "примерить", "traɪ ɒn", "трай он"],
-  ["turn down", "отказаться; убавить", "tɜːrn daʊn", "тёрн даун"],
+  ["turn down", "отказаться; отклонить; убавить", "tɜːrn daʊn", "тёрн даун"],
   ["turn on", "включить", "tɜːrn ɒn", "тёрн он"],
   ["turn off", "выключить", "tɜːrn ɒf", "тёрн оф"],
   ["wake up", "проснуться", "weɪk ʌp", "уэйк ап"],
@@ -1411,90 +1445,89 @@ const PHRASAL = [
   ["be out", "отсутствовать", "biː aʊt", "би аут"],
   ["be over", "окончиться", "biː ˈoʊvər", "би о́увэр"],
   ["be up", "проснуться", "biː ʌp", "би ап"],
-  ["be up to", "собираться сделать", "biː ʌp tuː", "би ап ту"],
+  ["be up to", "собираться сделать; замышлять; зависеть от", "biː ʌp tuː", "би ап ту"],
   ["blow up", "взорваться", "bloʊ ʌp", "блоу ап"],
-  ["break out", "вырваться", "breɪk aʊt", "брэйк аут"],
+  ["break out", "вспыхнуть; начаться; вырваться", "breɪk aʊt", "брэйк аут"],
   ["call back", "перезвонить", "kɔːl bæk", "кол бэк"],
   ["carry out", "выполнять", "ˈkæri aʊt", "кэ́ри аут"],
   ["catch up", "догнать", "kætʃ ʌp", "кэтч ап"],
   ["check in", "зарегистрироваться", "tʃek ɪn", "чек ин"],
-  ["check out", "проверять", "tʃek aʊt", "чек аут"],
+  ["check out", "проверить; посмотреть; выписаться из отеля", "tʃek aʊt", "чек аут"],
   ["come from", "происходить из", "kʌm frɒm", "кам фром"],
   ["come in", "входить", "kʌm ɪn", "кам ин"],
   ["come on", "давай!", "kʌm ɒn", "кам он"],
   ["come out", "выходить", "kʌm aʊt", "кам аут"],
-  ["come over", "заезжать", "kʌm ˈoʊvər", "кам о́увэр"],
+  ["come over", "зайти/приехать в гости", "kʌm ˈoʊvər", "кам о́увэр"],
   ["come up", "появляться", "kʌm ʌp", "кам ап"],
-  ["count on", "рассчитывать на", "kaʊnt ɒn", "каунт он"],
+  ["count on", "рассчитывать на", "kaʊnt ɒn / kaʊnt ɔːn", "каунт он"],
   ["cut off", "отрезать", "kʌt ɒf", "кат оф"],
   ["cut out", "вырезать", "kʌt aʊt", "кат аут"],
   ["end up", "оказаться", "end ʌp", "энд ап"],
   ["get along", "ладить", "ɡet əˈlɒŋ", "гэт элонг"],
-  ["get around", "обойти", "ɡet əˈraʊnd", "гэт эра́унд"],
+  ["get around", "передвигаться; обойти", "ɡet əˈraʊnd", "гэт эра́унд"],
   ["get away", "ускользнуть", "ɡet əˈweɪ", "гэт эуэ́й"],
   ["get in", "войти", "ɡet ɪn", "гэт ин"],
   ["get off", "выходить", "ɡet ɒf", "гэт оф"],
   ["get on", "садиться на", "ɡet ɒn", "гэт он"],
-  ["get out", "уходить", "ɡet aʊt", "гэт аут"],
-  ["get through", "справиться", "ɡet θruː", "гэт сру"],
+  ["get out", "выйти; выбраться; уйти", "ɡet aʊt", "гэт аут"],
+  ["get through", "справиться; пройти через; дозвониться", "ɡet θruː", "гэт сру"],
   ["get up", "вставать", "ɡet ʌp", "гэт ап"],
   ["go away", "уходить", "ɡoʊ əˈweɪ", "гоу эуэ́й"],
   ["go back", "возвращаться", "ɡoʊ bæk", "гоу бэк"],
   ["go down", "спускаться вниз", "ɡoʊ daʊn", "гоу даун"],
-  ["go off", "уходить", "ɡoʊ ɒf", "гоу оф"],
+  ["go off", "сработать; испортиться; уйти", "ɡoʊ ɒf", "гоу оф"],
   ["go out", "выходить", "ɡoʊ aʊt", "гоу аут"],
   ["go over", "повторять", "ɡoʊ ˈoʊvər", "гоу о́увэр"],
-  ["go through", "пройти через", "ɡoʊ θruː", "гоу сру"],
+  ["go through", "пройти через; пережить; просмотреть", "ɡoʊ θruː", "гоу сру"],
   ["go up", "подниматься", "ɡoʊ ʌp", "гоу ап"],
   ["hang on", "подождите!", "hæŋ ɒn", "хэнг он"],
   ["hang up", "положить трубку", "hæŋ ʌp", "хэнг ап"],
-  ["help out", "помочь", "help aʊt", "хэлп аут"],
+  ["help out", "выручить; помочь", "help aʊt", "хэлп аут"],
   ["keep up", "не отставать", "kiːp ʌp", "кип ап"],
   ["knock out", "вырубить", "nɒk aʊt", "нок аут"],
   ["lie down", "лечь", "laɪ daʊn", "лай даун"],
   ["line up", "выстраиваться в очередь", "laɪn ʌp", "лайн ап"],
   ["look back", "оглядываться", "lʊk bæk", "лук бэк"],
-  ["look out", "быть осторожным", "lʊk aʊt", "лук аут"],
+  ["look out", "осторожно!; быть настороже", "lʊk aʊt", "лук аут"],
   ["look over", "просматривать", "lʊk ˈoʊvər", "лук о́увэр"],
-  ["make out", "понимать", "meɪk aʊt", "мэйк аут"],
-  ["make up", "составлять", "meɪk ʌp", "мэйк ап"],
+  ["make out", "разобрать; понять; различить", "meɪk aʊt", "мэйк аут"],
+  ["make up", "составлять; придумывать; мириться", "meɪk ʌp", "мэйк ап"],
   ["move in", "въезжать", "muːv ɪn", "мув ин"],
   ["move on", "идти дальше", "muːv ɒn", "мув он"],
   ["move out", "съезжать", "muːv aʊt", "мув аут"],
-  ["pass out", "терять сознание", "pæs aʊt", "пэс аут"],
+  ["pass out", "потерять сознание; раздавать", "pæs aʊt", "пэс аут"],
   ["point out", "указывать", "pɔɪnt aʊt", "пойнт аут"],
-  ["pull off", "справиться", "pʊl ɒf", "пул оф"],
-  ["pull out", "вытаскивать", "pʊl aʊt", "пул аут"],
-  ["pull up", "подъезжать", "pʊl ʌp", "пул ап"],
-  ["put a way", "убирать", "pʊt əˈweɪ", "пут эуэ́й"],
-  ["put down", "положить", "pʊt daʊn", "пут даун"],
-  ["put on", "надевать", "pʊt ɒn", "пут он"],
-  ["put out", "тушить", "pʊt aʊt", "пут аут"],
+  ["pull off", "справиться; провернуть; снять", "pʊl ɒf", "пул оф"],
+  ["pull out", "вытаскивать; выезжать; отказаться от участия", "pʊl aʊt", "пул аут"],
+  ["pull up", "подъехать; остановиться; подтянуть", "pʊl ʌp", "пул ап"],
+  ["put down", "положить; записать", "pʊt daʊn", "пут даун"],
+  ["put on", "надевать; включать", "pʊt ɒn", "пут он"],
+  ["put out", "тушить; беспокоить", "pʊt aʊt", "пут аут"],
   ["run away", "убегать", "rʌn əˈweɪ", "ран эуэ́й"],
   ["run out", "заканчиваться", "rʌn aʊt", "ран аут"],
   ["set off", "отправляться в путь", "set ɒf", "сэт оф"],
-  ["settle down", "успокаиваться", "ˈsetəl daʊn", "сэ́тэл даун"],
+  ["settle down", "успокоиться; обосноваться", "ˈsetəl daʊn", "сэ́тэл даун"],
   ["shut down", "выключить", "ʃʌt daʊn", "шат даун"],
   ["shut up", "замолчать", "ʃʌt ʌp", "шат ап"],
   ["sit down", "садиться", "sɪt daʊn", "сит даун"],
-  ["stand by", "ждать", "stænd baɪ", "стэнд бай"],
+  ["stand by", "ждать; быть наготове; поддерживать", "stænd baɪ", "стэнд бай"],
   ["stand out", "выделяться", "stænd aʊt", "стэнд аут"],
   ["stand up", "вставать", "stænd ʌp", "стэнд ап"],
   ["switch off", "выключать", "swɪtʃ ɒf", "свич оф"],
   ["switch on", "включать", "swɪtʃ ɒn", "свич он"],
   ["take away", "забирать", "teɪk əˈweɪ", "тэйк эуэ́й"],
-  ["take back", "взять назад", "teɪk bæk", "тэйк бэк"],
-  ["take in", "воспринимать", "teɪk ɪn", "тэйк ин"],
-  ["take on", "принимать", "teɪk ɒn", "тэйк он"],
+  ["take back", "забрать обратно; взять назад слова", "teɪk bæk", "тэйк бэк"],
+  ["take in", "воспринимать; усваивать; приютить; обмануть", "teɪk ɪn", "тэйк ин"],
+  ["take on", "взять на себя; нанять; принять вызов", "teɪk ɒn", "тэйк он"],
   ["take over", "взять под контроль", "teɪk ˈoʊvər", "тэйк о́увэр"],
-  ["throw up", "тошнить", "θroʊ ʌp", "сроу ап"],
+  ["throw up", "вырвать; стошнить", "θroʊ ʌp", "сроу ап"],
   ["turn around", "оборачиваться", "tɜːrn əˈraʊnd", "тёрн эра́унд"],
   ["turn into", "превращаться", "tɜːrn ˈɪntuː", "тёрн и́нту"],
-  ["turn out", "оказаться", "tɜːrn aʊt", "тёрн аут"],
+  ["turn out", "оказаться; получиться", "tɜːrn aʊt", "тёрн аут"],
   ["turn up", "появляться", "tɜːrn ʌp", "тёрн ап"],
   ["walk away", "уходить", "wɔːk əˈweɪ", "уок эуэ́й"],
-  ["watch out", "быть осторожным", "wɒtʃ aʊt", "уоч аут"],
-  ["wind up", "оказаться", "waɪnd ʌp", "уайнд ап"],
+  ["watch out", "осторожно!; быть осторожным", "wɒtʃ aʊt", "уоч аут"],
+  ["wind up", "оказаться; закончить", "waɪnd ʌp", "уайнд ап"],
   ["write down", "записывать", "raɪt daʊn", "райт даун"],
 ];
 
@@ -1514,17 +1547,20 @@ let inputList = [], inputIdx = 0, inputAnswered = false;
 let fcList = [], fcIdx = 0, fcLearned = new Set();
 
 let totalOk = 0, totalErr = 0, streak = 0;
+let mistakes = []; // [{cat, word, correctAnswer, ts}]
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STORAGE  (localStorage keys)
 // ─────────────────────────────────────────────────────────────────────────────
 const SK = {
-  cv:  'wt_cv',   // custom verbs
-  ca:  'wt_ca',   // custom adjs
-  cn:  'wt_cn',   // custom nouns
-  cph: 'wt_cph',  // custom phrasal
-  del: 'wt_del',  // permanently deleted  {cat:word, ...}
-  ed:  'wt_ed',   // edit overrides       {cat:word: newRu}
+  cv:    'wt_cv',    // custom verbs
+  ca:    'wt_ca',    // custom adjs
+  cn:    'wt_cn',    // custom nouns
+  cph:   'wt_cph',   // custom phrasal
+  del:   'wt_del',   // permanently deleted  {cat:word, ...}
+  ed:    'wt_ed',    // edit overrides       {cat:word: newRu}
+  stats: 'wt_stats', // {ok, err, streak}
+  mist:  'wt_mist',  // mistakes log [{cat, word, correctAnswer, ts}, ...]
 };
 
 let customVerbs   = [];
@@ -1542,6 +1578,9 @@ function loadStorage() {
   customPhrasal = load(SK.cph, []);
   deleted  = new Set(load(SK.del, []));
   edits    = load(SK.ed,  {});
+  const stats = load(SK.stats, { ok: 0, err: 0, streak: 0 });
+  totalOk = stats.ok; totalErr = stats.err; streak = stats.streak;
+  mistakes = load(SK.mist, []);
 }
 
 function saveStorage() {
@@ -1552,6 +1591,14 @@ function saveStorage() {
   s(SK.cph, customPhrasal);
   s(SK.del, [...deleted]);
   s(SK.ed,  edits);
+}
+
+function saveStats() {
+  try { localStorage.setItem(SK.stats, JSON.stringify({ ok: totalOk, err: totalErr, streak })); } catch {}
+}
+
+function saveMistakes() {
+  try { localStorage.setItem(SK.mist, JSON.stringify(mistakes)); } catch {}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1614,24 +1661,26 @@ function switchCat(c) {
   cat = c;
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === c));
   updateLogo();
+  updateMistakesBadge();
   restart();
 }
 
 function switchMode(m) {
   mode = m;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
-  ['quiz','input','cards','browse','add'].forEach(p => {
+  ['quiz','input','cards','browse','mistakes','add'].forEach(p => {
     document.getElementById('pane-' + p).classList.toggle('hidden', p !== m);
   });
   restart();
 }
 
 function restart() {
-  if (mode === 'quiz')   startQuiz();
-  if (mode === 'input')  startInput();
-  if (mode === 'cards')  startCards();
-  if (mode === 'browse') renderBrowse();
-  if (mode === 'add')    renderAdd();
+  if (mode === 'quiz')     startQuiz();
+  if (mode === 'input')    startInput();
+  if (mode === 'cards')    startCards();
+  if (mode === 'browse')   renderBrowse();
+  if (mode === 'mistakes') renderMistakes();
+  if (mode === 'add')      renderAdd();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1746,6 +1795,8 @@ function pickAnswer(btn, chosen, correct) {
     btn.classList.add('wrong');
     fb.textContent = '✗ Правильно: ' + correct; fb.className = 'feedback err';
     totalErr++; streak = 0;
+    const qWord = quizList[quizIdx];
+    if (qWord) logMistake(cat, qWord[0], getRu(cat, qWord));
   }
   updateStats();
   setTimeout(() => { quizIdx++; showQuestion(); }, 1200);
@@ -1835,7 +1886,9 @@ function checkSingle() {
   if (val === correct) {
     inp.classList.add('correct'); fb.textContent = '✓ Правильно!'; fb.className = 'feedback ok'; totalOk++; streak++;
   } else {
-    inp.classList.add('wrong'); fb.textContent = '✗ Правильно: ' + (isRu ? v[0] : getRu(cat, v)); fb.className = 'feedback err'; totalErr++; streak = 0;
+    const properAnswer = isRu ? v[0] : getRu(cat, v);
+    inp.classList.add('wrong'); fb.textContent = '✗ Правильно: ' + properAnswer; fb.className = 'feedback err'; totalErr++; streak = 0;
+    logMistake(cat, v[0], getRu(cat, v));
   }
   document.getElementById('i-next').textContent = 'Следующее →';
   updateStats();
@@ -1853,7 +1906,11 @@ function checkForms() {
   document.getElementById('i-v3').classList.add(ok3 ? 'correct' : 'wrong');
   const fb = document.getElementById('i-fb');
   if (ok2 && ok3) { fb.textContent = '✓ Правильно!'; fb.className = 'feedback ok'; totalOk++; streak++; }
-  else { fb.textContent = '✗ Правильно: ' + v[1] + ' / ' + v[2]; fb.className = 'feedback err'; totalErr++; streak = 0; }
+  else {
+    const properForms = v[1] + ' / ' + v[2];
+    fb.textContent = '✗ Правильно: ' + properForms; fb.className = 'feedback err'; totalErr++; streak = 0;
+    logMistake('verbs', v[0], properForms);
+  }
   document.getElementById('i-next').textContent = 'Следующее →';
   updateStats();
 }
@@ -2219,6 +2276,55 @@ async function retryPron(c, word) {
 }
 
 // Fetch IPA for a single word from the Free Dictionary API
+// ── MISTAKES TAB ─────────────────────────────────────────────────────────────
+function renderMistakes() {
+  const list = mistakes.filter(m => m.cat === cat);
+  document.getElementById('mistakes-total').textContent = list.length;
+
+  const container = document.getElementById('mistakes-list');
+  if (!list.length) {
+    container.innerHTML = '<div class="empty-list">Пока нет ошибок в этой категории. Так держать!</div>';
+    return;
+  }
+
+  // Aggregate by word: count occurrences, keep latest correct answer
+  const byWord = {};
+  for (const m of list) {
+    if (!byWord[m.word]) byWord[m.word] = { word: m.word, correctAnswer: m.correctAnswer, count: 0 };
+    byWord[m.word].count++;
+  }
+  const aggregated = Object.values(byWord).sort((a, b) => b.count - a.count);
+
+  container.innerHTML = aggregated.map(m => {
+    const safeWord = m.word.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    const safeAns  = m.correctAnswer.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    return '<div class="mistake-item">'
+      + '<span class="mistake-word">' + safeWord + '</span>'
+      + '<span class="mistake-answer">' + safeAns + '</span>'
+      + '<span class="mistake-count">×' + m.count + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+async function clearMistakesForCat() {
+  const list = mistakes.filter(m => m.cat === cat);
+  if (!list.length) return;
+  const labels = { verbs: 'глаголов', adj: 'прилагательных', nouns: 'существительных', phrasal: 'фразовых глаголов' };
+  const ok = await showConfirm('Очистить список ошибок?', 'Будет удалено ' + list.length + ' записей об ошибках в категории «' + labels[cat] + '».', 'Очистить');
+  if (!ok) return;
+  mistakes = mistakes.filter(m => m.cat !== cat);
+  saveMistakes();
+  renderMistakes();
+  updateMistakesBadge();
+}
+
+function updateMistakesBadge() {
+  const badge = document.getElementById('mistakes-badge');
+  if (!badge) return;
+  const count = mistakes.filter(m => m.cat === cat).length;
+  badge.textContent = count > 0 ? '(' + count + ')' : '';
+}
+
 async function fetchPronWord(w) {
   try {
     const controller = new AbortController();
@@ -2365,6 +2471,14 @@ function updateStats() {
   document.getElementById('s-ok').textContent     = totalOk;
   document.getElementById('s-err').textContent    = totalErr;
   document.getElementById('s-streak').textContent = streak;
+  saveStats();
+}
+
+function logMistake(c, word, correctAnswer) {
+  mistakes.unshift({ cat: c, word, correctAnswer, ts: Date.now() });
+  if (mistakes.length > 300) mistakes = mistakes.slice(0, 300); // cap size
+  saveMistakes();
+  updateMistakesBadge();
 }
 
 function showMsg(el, text, ok) {
@@ -2379,6 +2493,7 @@ loadStorage();
 dedupeCustomArrays();
 switchCat('verbs');
 switchMode('quiz');
+updateMistakesBadge();
 
 
 // ── IMPORT ────────────────────────────────────────────────────────────────────
