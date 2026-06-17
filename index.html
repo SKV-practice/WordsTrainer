@@ -74,9 +74,10 @@ header {
 /* ── PROGRESS ── */
 .progress { margin-bottom: 22px; }
 .progress-info {
-  display: flex; justify-content: space-between;
+  display: flex; justify-content: space-between; align-items: baseline;
   font-size: .8rem; color: var(--muted); margin-bottom: 6px;
 }
+.progress-count { display: inline-flex; gap: 4px; }
 .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
 .progress-fill {
   height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
@@ -498,7 +499,7 @@ header {
     </div>
 
     <div class="progress">
-      <div class="progress-info"><span id="q-cur">1</span> / <span id="q-tot">0</span><span id="q-pct">0%</span></div>
+      <div class="progress-info"><span class="progress-count"><span id="q-cur">1</span> / <span id="q-tot">0</span></span><span id="q-pct">0%</span></div>
       <div class="progress-bar"><div class="progress-fill" id="q-fill" style="width:0%"></div></div>
     </div>
 
@@ -533,7 +534,7 @@ header {
     </div>
 
     <div class="progress">
-      <div class="progress-info"><span id="i-cur">1</span> / <span id="i-tot">0</span><span id="i-pct">0%</span></div>
+      <div class="progress-info"><span class="progress-count"><span id="i-cur">1</span> / <span id="i-tot">0</span></span><span id="i-pct">0%</span></div>
       <div class="progress-bar"><div class="progress-fill" id="i-fill" style="width:0%"></div></div>
     </div>
 
@@ -562,7 +563,7 @@ header {
   <!-- ══ FLASHCARDS ══ -->
   <div id="pane-cards" class="hidden">
     <div class="progress">
-      <div class="progress-info"><span id="fc-cur">1</span> / <span id="fc-tot">0</span><span id="fc-pct">0%</span></div>
+      <div class="progress-info"><span class="progress-count"><span id="fc-cur">1</span> / <span id="fc-tot">0</span></span><span id="fc-pct">0%</span></div>
       <div class="progress-bar"><div class="progress-fill" id="fc-fill" style="width:0%"></div></div>
     </div>
     <div class="fc-wrap">
