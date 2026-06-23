@@ -516,7 +516,8 @@ header {
       <div class="end-score" id="end-score"></div>
       <div class="end-desc"  id="end-desc"></div>
       <div class="end-actions">
-        <button class="btn-primary" onclick="startQuiz()">&#8635; Ещё раз</button>
+        <button class="btn-primary" id="btn-next-batch" onclick="loadNextBatch(true)">Следующие 20 &#8594;</button>
+        <button class="btn-primary" onclick="startQuiz()">&#8635; Сначала</button>
         <button class="btn-ghost"   onclick="switchMode('cards')">Карточки</button>
       </div>
     </div>
@@ -973,6 +974,8 @@ const VERBS = [
   ["predict", "predicted", "predicted", "предсказывать", "prɪˈdɪkt", "придикт"],
   ["trip", "tripped", "tripped", "споткнуться; оступиться", "trɪp", "трип"],
   ["urge", "urged", "urged", "побуждать; настоятельно советовать", "ɜːrdʒ", "ёрдж"],
+  ["disagree", "disagreed", "disagreed", "не соглашаться", "ˌdɪsəˈɡriː", "дисэгри́"],
+  ["expect", "expected", "expected", "ожидать; рассчитывать", "ɪkˈspekt", "икспэ́кт"],
 ];
 const ADJS = [
   ["advanced", "продвинутый", "ədˈvænst", "эдвэ́нст"],
@@ -1086,6 +1089,15 @@ const ADJS = [
   ["enough", "достаточно", "ɪˈnʌf", "ина́ф"],
   ["flat", "плоский; спущенный (о шине)", "flæt", "флэт"],
   ["nearby", "поблизости; неподалёку", "ˈnɪərbaɪ", "ни́эрбай"],
+  ["pleasing", "приятный, радующий", "ˈpliːzɪŋ", "пли́зинг"],
+  ["most", "большинство; наибольший", "moʊst", "моуст"],
+  ["bored", "скучающий; которому скучно", "bɔːrd", "бо́рд"],
+  ["secretly", "тайно; втайне", "ˈsiːkrətli", "си́крэтли"],
+  ["alone", "один; в одиночестве", "əˈloʊn", "эло́ун"],
+  ["productive", "продуктивный", "prəˈdʌktɪv", "прэда́ктив"],
+  ["overall", "общий; в целом", "ˌoʊvərˈɔːl", "о́увэро́л"],
+  ["flooded", "затопленный", "ˈflʌdɪd", "фла́дид"],
+  ["aloud", "вслух", "əˈlaʊd", "эла́уд"],
 ];
 const NOUNS = [
   ["ability", "способность", "əˈbɪlɪti", "эби́лити"],
@@ -1411,6 +1423,11 @@ const NOUNS = [
   ["tire", "шина; колесо", "taɪər", "та́йэр"],
   ["tow truck", "эвакуатор", "toʊ trʌk", "тоу трак"],
   ["recently", "недавно", "ˈriːsəntli", "ри́сэнтли"],
+  ["wish", "желание", "wɪʃ", "уиш"],
+  ["bore", "скука; зануда", "bɔːr", "бо́р"],
+  ["parenting", "воспитание детей; родительство", "ˈperəntɪŋ", "пэ́рэнтинг"],
+  ["draft", "черновик; проект", "dræft", "дрэфт"],
+  ["ever", "когда-либо; всегда", "ˈevər", "э́вэр"],
 ];
 const PHRASAL = [
   ["ask out", "пригласить на свидание", "æsk aʊt", "эск аут"],
@@ -1560,6 +1577,8 @@ const PHRASAL = [
   ["fair enough", "справедливо; ладно, согласен", "fer ɪˈnʌf", "фэр ина́ф"],
   ["It doesn't matter", "это не важно; неважно", "ɪt ˈdʌzənt ˈmætər", "ит да́зэнт мэ́тэр"],
   ["Got it", "понял; ясно", "ɡɒt ɪt", "гот ит"],
+  ["for hours", "часами", "fər ˈaʊərz", "фэр а́уэрз"],
+  ["talk through", "обсудить; проговорить", "tɔːk θruː", "ток сру"],
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1574,6 +1593,8 @@ let idir2  = 'ru';    // input direction for adj/nouns/phrasal
 let onlyIrreg = false;
 
 let quizList = [], quizIdx = 0, quizAnswered = false;
+let quizSeenWords = new Set(); // tracks words shown in current cycle
+const QUIZ_BATCH = 20;
 let inputList = [], inputIdx = 0, inputAnswered = false;
 let fcList = [], fcIdx = 0, fcLearned = new Set();
 
@@ -1733,18 +1754,28 @@ function setDir2(d) {
 }
 
 function startQuiz() {
-  // Show correct chip set
   document.getElementById('chips-verbs').classList.toggle('hidden', cat !== 'verbs');
   document.getElementById('chips-simple').classList.toggle('hidden', cat === 'verbs');
-
   document.getElementById('quiz-body').classList.remove('hidden');
   document.getElementById('quiz-end').classList.add('hidden');
+  quizSeenWords = new Set();
+  loadNextBatch();
+}
 
+function loadNextBatch(continueRound) {
   let pool = getList();
   if (cat === 'verbs' && onlyIrreg) pool = pool.filter(isIrreg);
-  quizList = shuffle(pool);
+  // Filter out already-seen words; if all seen, reset cycle
+  let unseen = pool.filter(v => !quizSeenWords.has(v[0]));
+  if (unseen.length === 0) { quizSeenWords = new Set(); unseen = pool; }
+  quizList = shuffle(unseen).slice(0, QUIZ_BATCH);
+  quizList.forEach(v => quizSeenWords.add(v[0]));
   quizIdx = 0;
   quizAnswered = false;
+  if (continueRound) {
+    document.getElementById('quiz-body').classList.remove('hidden');
+    document.getElementById('quiz-end').classList.add('hidden');
+  }
   showQuestion();
 }
 
@@ -1839,7 +1870,14 @@ function showQuizEnd() {
   const total = quizList.length;
   const pct = total ? Math.round(totalOk / (totalOk + totalErr) * 100) : 0;
   setText('end-score', pct + '%');
-  setText('end-desc', 'Раунд завершён! ' + (pct >= 80 ? '🎉' : pct >= 50 ? '👍' : '📚'));
+  // Check if more unseen words remain
+  let pool = getList();
+  if (cat === 'verbs' && onlyIrreg) pool = pool.filter(isIrreg);
+  const unseen = pool.filter(v => !quizSeenWords.has(v[0]));
+  const hasMore = unseen.length > 0;
+  setText('end-desc', 'Раунд завершён! ' + (pct >= 80 ? '🎉' : pct >= 50 ? '👍' : '📚')
+    + (hasMore ? ' Осталось ещё ' + unseen.length + ' слов.' : ' Все слова пройдены!'));
+  document.getElementById('btn-next-batch').classList.toggle('hidden', !hasMore);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
