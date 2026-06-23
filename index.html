@@ -589,6 +589,15 @@ header {
       <button class="fc-btn"         onclick="fcNav(1)">Вперёд &#8594;</button>
     </div>
     <div class="fc-learned-info">Выучено: <b id="fc-lcount" style="color:var(--green)">0</b></div>
+    <div id="fc-end" class="end-screen hidden">
+      <div class="end-score" id="fc-end-score"></div>
+      <div class="end-desc"  id="fc-end-desc"></div>
+      <div class="end-actions">
+        <button class="btn-primary" id="fc-btn-next-batch" onclick="fcLoadNextBatch(true)">Следующие 20 &#8594;</button>
+        <button class="btn-primary" onclick="startCards()">&#8635; Сначала</button>
+        <button class="btn-ghost"   onclick="switchMode('quiz')">Тест</button>
+      </div>
+    </div>
   </div>
 
   <!-- ══ BROWSE ══ -->
@@ -1597,6 +1606,7 @@ let quizSeenWords = new Set(); // tracks words shown in current cycle
 const QUIZ_BATCH = 20;
 let inputList = [], inputIdx = 0, inputAnswered = false;
 let fcList = [], fcIdx = 0, fcLearned = new Set();
+let fcSeenWords = new Set();
 
 let totalOk = 0, totalErr = 0, streak = 0;
 let mistakes = []; // [{cat, word, correctAnswer, ts}]
@@ -1990,7 +2000,28 @@ function nextInput() { inputIdx++; showInputQ(); }
 // FLASHCARDS
 // ─────────────────────────────────────────────────────────────────────────────
 function startCards() {
-  fcList = shuffle(getList()); fcIdx = 0; fcLearned = new Set(); showCard();
+  fcSeenWords = new Set();
+  document.getElementById('fc-end').classList.add('hidden');
+  document.getElementById('fc-wrap') && document.querySelector('.fc-wrap').classList.remove('hidden');
+  document.querySelector('.fc-nav').classList.remove('hidden');
+  document.querySelector('.fc-learned-info').classList.remove('hidden');
+  fcLoadNextBatch();
+}
+
+function fcLoadNextBatch(continueRound) {
+  let pool = getList();
+  let unseen = pool.filter(v => !fcSeenWords.has(v[0]));
+  if (unseen.length === 0) { fcSeenWords = new Set(); unseen = pool; }
+  fcList = shuffle(unseen).slice(0, QUIZ_BATCH);
+  fcList.forEach(v => fcSeenWords.add(v[0]));
+  fcIdx = 0; fcLearned = new Set();
+  if (continueRound) {
+    document.getElementById('fc-end').classList.add('hidden');
+    document.querySelector('.fc-wrap').classList.remove('hidden');
+    document.querySelector('.fc-nav').classList.remove('hidden');
+    document.querySelector('.fc-learned-info').classList.remove('hidden');
+  }
+  showCard();
 }
 
 function showCard() {
@@ -2015,7 +2046,28 @@ function showCard() {
 }
 
 function flipCard() { document.getElementById('fc').classList.toggle('flipped'); }
-function fcNav(d)   { fcIdx = Math.max(0, Math.min(fcList.length - 1, fcIdx + d)); showCard(); }
+function fcNav(d) {
+  const newIdx = fcIdx + d;
+  if (newIdx >= fcList.length) { showCardsEnd(); return; }
+  fcIdx = Math.max(0, Math.min(fcList.length - 1, newIdx));
+  showCard();
+}
+
+function showCardsEnd() {
+  document.querySelector('.fc-wrap').classList.add('hidden');
+  document.querySelector('.fc-nav').classList.add('hidden');
+  document.querySelector('.fc-learned-info').classList.add('hidden');
+  document.getElementById('fc-end').classList.remove('hidden');
+  const learned = fcLearned.size;
+  const total   = fcList.length;
+  document.getElementById('fc-end-score').textContent = learned + ' / ' + total;
+  let pool = getList();
+  const unseen = pool.filter(v => !fcSeenWords.has(v[0]));
+  const hasMore = unseen.length > 0;
+  document.getElementById('fc-end-desc').textContent = 'Раунд завершён! '
+    + (hasMore ? 'Осталось ещё ' + unseen.length + ' слов.' : 'Все слова пройдены!');
+  document.getElementById('fc-btn-next-batch').classList.toggle('hidden', !hasMore);
+}
 function markLearned() { fcLearned.add(fcIdx); showCard(); setTimeout(() => fcNav(1), 400); }
 
 // ─────────────────────────────────────────────────────────────────────────────
